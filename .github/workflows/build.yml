@@ -1,0 +1,84 @@
+# Builds and tests Varta on Linux and Windows. The Windows job produces a ready-to-install
+# package (artifact "Varta-windows-x64"): vartad.exe + WinDivert + varta-gui.exe with Qt.
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake pkg-config libnetfilter-queue-dev qt6-base-dev qt6-tools-dev qt6-l10n-tools
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  windows:
+    runs-on: windows-2022
+    env:
+      WINDIVERT_VERSION: 2.2.2
+      # SHA-256 of the official WinDivert-2.2.2-A.zip from github.com/basil00/WinDivert/releases
+      WINDIVERT_SHA256: 63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          arch: win64_msvc2022_64
+          archives: qtbase qttools qttranslations
+          cache: true
+
+      - name: Download WinDivert
+        shell: pwsh
+        run: |
+          $zip = "WinDivert.zip"
+          Invoke-WebRequest "https://github.com/basil00/WinDivert/releases/download/v$env:WINDIVERT_VERSION/WinDivert-$env:WINDIVERT_VERSION-A.zip" -OutFile $zip
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          if ($hash -ne $env:WINDIVERT_SHA256) { throw "WinDivert checksum mismatch: $hash" }
+          Expand-Archive $zip -DestinationPath third_party
+          Rename-Item "third_party/WinDivert-$env:WINDIVERT_VERSION-A" WinDivert
+
+      - name: Build
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+          cmake --build build --config Release --parallel
+
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $out = "Varta-windows-x64"
+          New-Item -ItemType Directory $out | Out-Null
+          Copy-Item build/Release/vartad.exe, build/Release/varta.exe, build/gui/Release/varta-gui.exe $out
+          Copy-Item third_party/WinDivert/x64/WinDivert.dll, third_party/WinDivert/x64/WinDivert64.sys $out
+          Copy-Item third_party/WinDivert/LICENSE "$out/WinDivert-LICENSE.txt"
+          Copy-Item packaging/windows/*.ps1, LICENSE, README.md $out
+          windeployqt --release --no-compiler-runtime "$out/varta-gui.exe"
+          # MSVC runtime: ship the redistributable DLLs next to the programs.
+          $crt = Get-ChildItem "$env:VCToolsRedistDir\x64\Microsoft.VC*.CRT" | Select-Object -First 1
+          Copy-Item "$($crt.FullName)\*.dll" $out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Varta-windows-x64
+          path: Varta-windows-x64

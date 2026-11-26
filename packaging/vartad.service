@@ -1,0 +1,20 @@
+[Unit]
+Description=Varta interactive application firewall
+After=network-pre.target nftables.service
+Wants=network-pre.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/vartad
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=2
+# Light hardening: vartad only writes its own config/state directories.
+NoNewPrivileges=yes
+ProtectSystem=full
+ReadWritePaths=/etc/varta /var/lib/varta
+ProtectHome=read-only
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,76 @@
+# Varta configuration. Edit by hand or run `varta menu`.
+# Values: on/off. Lines starting with # are comments.
+
+[general]
+# Block domains through the hosts file
+use_hosts = on
+# Use the OS firewall (nftables / pf / Windows Firewall)
+use_firewall = on
+# Also null-route domains for IPv6 (:: entries)
+hosts_ipv6 = on
+# Resolve blocked domains to IPs and firewall them (may hit shared CDN IPs!)
+resolve_domains_to_ips = off
+# Windows only: disable DiagTrack service and set AllowTelemetry=0
+windows_disable_diagtrack = off
+
+[categories]
+# Windows telemetry (Connected User Experiences, Watson error reports)
+windows = on
+# Microsoft Office telemetry
+office = on
+# Apple analytics and ad measurement
+apple = on
+# Google Analytics, Tag Manager and ad networks (DoubleClick, AdSense)
+google = on
+# Meta/Facebook pixel and Audience Network
+meta = off
+# Third-party analytics & session recording (Mixpanel, Segment, Hotjar, Clarity...)
+analytics = on
+# Ad exchanges and social ad trackers (Criteo, Taboola, Outbrain, AppNexus...)
+ads = on
+# NVIDIA GeForce Experience telemetry
+nvidia = on
+# Linux distro metrics (Ubuntu metrics/crash reports, popularity-contest)
+linux = on
+# Developer & app telemetry (Firefox, VS Code / .NET CLI)
+apps = on
+
+[security]
+# Drop unsolicited inbound connections
+default_inbound_deny = on
+# Keep SSH (tcp/22) reachable when inbound is denied
+allow_ssh = off
+# Ignore inbound ping (ICMP echo)
+block_ping = off
+# Block inbound SMB/NetBIOS (137-139, 445)
+block_smb_netbios = on
+# Block inbound Remote Desktop (3389)
+block_rdp = on
+# Block inbound Telnet (23) and FTP (21)
+block_legacy = on
+# Block inbound LLMNR (5355) and SSDP/UPnP (1900)
+block_llmnr_ssdp = on
+# Block inbound mDNS (5353) - breaks AirPlay/printer discovery
+block_mdns = off
+# Block outbound SMB (139/445) to public internet
+block_smb_to_internet = on
+# Block DNS-over-HTTPS/TLS to big public resolvers (so browsers can't bypass hosts)
+block_public_doh = off
+# Log dropped packets
+log_blocked = off
+
+# Extra inbound ports to open, one per line: 8080/tcp, 51820/udp, 3000
+[allow_in]
+
+# Domains that must never be blocked (subdomains included)
+[allow_domains]
+
+# Your own domains to block
+[block_domains]
+
+# IPs or CIDR ranges to block outbound (IPv4 and IPv6)
+[block_ips]
+
+# External hosts-format lists, downloaded by `varta update`. Example:
+# https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+[sources]

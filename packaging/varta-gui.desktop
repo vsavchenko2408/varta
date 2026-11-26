@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Varta Firewall
+Name[uk]=Файрвол Varta
+Comment=Ask before programs connect to the network
+Comment[uk]=Питати, перш ніж програма вийде в мережу
+Exec=varta-gui
+Icon=security-high
+Categories=System;Security;Network;
+Terminal=false
