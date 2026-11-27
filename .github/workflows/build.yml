@@ -146,10 +146,10 @@ jobs:
           sudo ./build/vartad --verbose --config-dir /tmp/vcfg --data-dir /tmp/vdata --run-dir /tmp/vrun \
                > /tmp/vartad.log 2>&1 &
           sleep 6
-          curl -s -m 10 -o /dev/null http://1.1.1.1/ || true   # seen by vartad and denied
+          /usr/bin/curl -s -m 10 -o /dev/null http://1.1.1.1/ || true   # seen by vartad and denied
           sleep 3
           blocked=0
-          curl -s -m 10 -o /dev/null http://1.1.1.1/ || blocked=1
+          /usr/bin/curl -s -m 10 -o /dev/null http://1.1.1.1/ || blocked=1
           sudo pfctl -a com.apple/varta_ask -t varta_deny -T show || true
           sudo pkill -INT -x vartad || true
           sleep 3
