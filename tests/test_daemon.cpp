@@ -52,7 +52,7 @@ static IpAddr ip(const char* s) {
 static void test_json() {
     Json j;
     std::string err;
-    CHECK(Json::parse(R"({"a":1,"b":"x\"yé","c":[true,null,2.5],"d":{"e":-3}})", j, err));
+    CHECK(Json::parse("{\"a\":1,\"b\":\"x\\\"y\\u00e9\",\"c\":[true,null,2.5],\"d\":{\"e\":-3}}", j, err));
     CHECK(j.integer("a") == 1);
     CHECK(j.str("b") == "x\"y\xc3\xa9");
     CHECK(j.get("c").size() == 3 && j.get("c").at(0).as_bool() && j.get("c").at(1).is_null());
