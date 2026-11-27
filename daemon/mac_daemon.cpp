@@ -50,7 +50,7 @@ static std::string shell_quote(const std::string& s) {
     return o + "'";
 }
 
-static int run(const std::string& cmd) { return std::system((cmd + " >/dev/null 2>&1").c_str()); }
+static int sh(const std::string& cmd) { return std::system((cmd + " >/dev/null 2>&1").c_str()); }
 
 static std::string run_capture(const std::string& cmd) {
     std::string out;
@@ -103,8 +103,8 @@ bool MacDaemon::install_pf() {
     }
     // The stock /etc/pf.conf evaluates every "com.apple/*" sub-anchor. Make sure that main
     // ruleset is loaded (pf may never have been enabled on this Mac).
-    if (run_capture("pfctl -s rules").find("com.apple/*") == std::string::npos) run("pfctl -f /etc/pf.conf");
-    if (run("pfctl -a " + std::string(kAnchor) + " -f " + shell_quote(file)) != 0) {
+    if (run_capture("pfctl -s rules").find("com.apple/*") == std::string::npos) sh("pfctl -f /etc/pf.conf");
+    if (sh("pfctl -a " + std::string(kAnchor) + " -f " + shell_quote(file)) != 0) {
         log("pfctl rejected the rules in " + file);
         return false;
     }
@@ -122,8 +122,8 @@ bool MacDaemon::install_pf() {
 }
 
 void MacDaemon::remove_pf() {
-    run("pfctl -a " + std::string(kAnchor) + " -F all");
-    if (!pf_token_.empty()) run("pfctl -X " + shell_quote(pf_token_));
+    sh("pfctl -a " + std::string(kAnchor) + " -F all");
+    if (!pf_token_.empty()) sh("pfctl -X " + shell_quote(pf_token_));
     pf_loaded_ = false;
 }
 
@@ -131,9 +131,9 @@ void MacDaemon::block_now(const IpAddr& ip) {
     const std::string s = ip.str();
     if (!pf_loaded_ || table_.count(s)) return;
     table_.insert(s);
-    run("pfctl -a " + std::string(kAnchor) + " -t " + kTable + " -T add " + s);
+    sh("pfctl -a " + std::string(kAnchor) + " -t " + kTable + " -T add " + s);
     // Close connections that are already open to it (states live outside the anchor).
-    run("pfctl -k " + std::string(ip.v6 ? "::/0" : "0.0.0.0/0") + " -k " + s);
+    sh("pfctl -k " + std::string(ip.v6 ? "::/0" : "0.0.0.0/0") + " -k " + s);
     log_verbose("blocked " + s);
 }
 
@@ -174,7 +174,7 @@ void MacDaemon::sync_block_table(bool force) {
         for (const auto& a : want) out << a << "\n";
     }
     if (pf_loaded_)
-        run("pfctl -a " + std::string(kAnchor) + " -t " + kTable + " -T replace -f " + shell_quote(file));
+        sh("pfctl -a " + std::string(kAnchor) + " -t " + kTable + " -T replace -f " + shell_quote(file));
     table_ = std::move(want);
 }
 
