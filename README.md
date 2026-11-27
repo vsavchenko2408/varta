@@ -117,7 +117,7 @@ journalctl -u vartad -f          # журнал служби
 
 **Встановлення.** Найпростіше — зібрати пакет на GitHub: після `git push` у вкладці **Actions →
 build** з'явиться артефакт **Varta-windows-x64** (vartad, WinDivert, varta-gui з усіма Qt DLL).
-Розпакуйте його і в PowerShell **від імені адміністратора**:
+Розпакуйте його і двічі клацніть **`install.cmd`** (він сам попросить права адміністратора). Або вручну в PowerShell **від імені адміністратора**:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass

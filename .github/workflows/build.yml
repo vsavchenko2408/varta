@@ -72,7 +72,7 @@ jobs:
           Copy-Item build/Release/vartad.exe, build/Release/varta.exe, build/gui/Release/varta-gui.exe $out
           Copy-Item third_party/WinDivert/x64/WinDivert.dll, third_party/WinDivert/x64/WinDivert64.sys $out
           Copy-Item third_party/WinDivert/LICENSE "$out/WinDivert-LICENSE.txt"
-          Copy-Item packaging/windows/*.ps1, LICENSE, README.md $out
+          Copy-Item packaging/windows/*.ps1, packaging/windows/*.cmd, LICENSE, README.md $out
           windeployqt --release --no-compiler-runtime "$out/varta-gui.exe"
           # MSVC runtime: ship the redistributable DLLs next to the programs.
           $crt = Get-ChildItem "$env:VCToolsRedistDir\x64\Microsoft.VC*.CRT" | Select-Object -First 1
