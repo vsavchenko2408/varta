@@ -9,6 +9,9 @@ qt_add_executable(varta-gui
   mainwindow.hpp mainwindow.cpp
 )
 target_link_libraries(varta-gui PRIVATE Qt6::Widgets Qt6::Network)
+# A windowed (not console) program on Windows and a proper .app bundle on macOS.
+# Without this Windows opens a terminal next to the GUI and closing it kills the app.
+set_target_properties(varta-gui PROPERTIES WIN32_EXECUTABLE ON MACOSX_BUNDLE ON)
 if(NOT MSVC)
   target_compile_options(varta-gui PRIVATE -Wall -Wextra)
 endif()
@@ -24,4 +27,4 @@ else()
   message(STATUS "Qt6 LinguistTools not found - GUI will be English only")
 endif()
 
-install(TARGETS varta-gui RUNTIME DESTINATION bin)
+install(TARGETS varta-gui RUNTIME DESTINATION bin BUNDLE DESTINATION .)
