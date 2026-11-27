@@ -15,10 +15,11 @@ namespace vartad {
 
 static constexpr int64_t kCacheMs = 1500;  // reuse a socket table this fresh before rescanning
 
-static IpAddr from_in_sockinfo(const in_sockinfo& si, bool remote) {
+// insi_faddr and insi_laddr are two distinct anonymous unions with the same layout.
+template <typename U>
+static IpAddr addr_from(const U& u, uint8_t vflag) {
     IpAddr a;
-    const auto& u = remote ? si.insi_faddr : si.insi_laddr;
-    if (si.insi_vflag & INI_IPV4) {
+    if (vflag & INI_IPV4) {
         std::memcpy(a.b.data(), &u.ina_46.i46a_addr4, 4);
     } else {
         a.v6 = true;
@@ -26,6 +27,10 @@ static IpAddr from_in_sockinfo(const in_sockinfo& si, bool remote) {
         a = a.unmapped();
     }
     return a;
+}
+
+static IpAddr from_in_sockinfo(const in_sockinfo& si, bool remote) {
+    return remote ? addr_from(si.insi_faddr, si.insi_vflag) : addr_from(si.insi_laddr, si.insi_vflag);
 }
 
 static bool is_any(const IpAddr& a) {
