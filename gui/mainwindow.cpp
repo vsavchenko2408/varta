@@ -1,5 +1,7 @@
 #include "mainwindow.hpp"
 
+#include "updater.hpp"
+
 #include <QAction>
 #include <QApplication>
 #include <QButtonGroup>
@@ -144,6 +146,7 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent) : QMainWindow(parent),
     root->setSpacing(0);
     root->addWidget(buildHeader());
 
+    updates_ = new UpdateChecker(this);
     tabs_ = new QTabWidget;
     tabs_->setDocumentMode(true);
     tabs_->addTab(buildConnectionsTab(), tr("Connections"));
@@ -186,6 +189,8 @@ MainWindow::MainWindow(Backend* backend, QWidget* parent) : QMainWindow(parent),
     restoreGeometry(qs.value("window/geometry").toByteArray());
     updateStatus();
 }
+
+void MainWindow::startUpdateCheck() { updates_->checkOnStartup(); }
 
 void MainWindow::showTab(int index) { tabs_->setCurrentIndex(index); }
 
@@ -434,6 +439,17 @@ QWidget* MainWindow::buildSettingsTab() {
     g->addRow(tr("Theme"), theme_);
     g->addRow(tr("Language"), lang);
     g->addRow(QString(), notifyBlocked_);
+    auto* autoUpdate = new QCheckBox(tr("Check for updates once a day"));
+    autoUpdate->setChecked(UpdateChecker::checkAtStartupEnabled());
+    autoUpdate->setToolTip(tr("One anonymous request to api.github.com. Nothing about you or your rules is sent."));
+    auto* checkNow = new QPushButton(tr("Check now"));
+    auto* updRow = new QHBoxLayout;
+    updRow->addWidget(autoUpdate);
+    updRow->addWidget(checkNow);
+    updRow->addStretch(1);
+    g->addRow(tr("Updates"), updRow);
+    connect(autoUpdate, &QCheckBox::toggled, this, [](bool on) { UpdateChecker::setCheckAtStartupEnabled(on); });
+    connect(checkNow, &QPushButton::clicked, this, [this] { updates_->checkNow(); });
     auto* restartHint = new QLabel(tr("Theme and language changes apply after restarting the GUI."));
     restartHint->setObjectName("muted");
     g->addRow(QString(), restartHint);
@@ -457,7 +473,7 @@ QWidget* MainWindow::buildAboutTab() {
     auto* icon = new QLabel;
     icon->setPixmap(style::shieldPixmap(style::Shield::Ok, 72));
     auto* text = new QLabel(
-        tr("<h2>Varta 0.3</h2>"
+        tr("<h2>Varta %1</h2>"
            "<p>An open-source application firewall: it asks before a program talks to the network, "
            "shows who owns every address and blocks known trackers and telemetry.</p>"
            "<p><b>How it works:</b> the <code>vartad</code> service holds the first packet of every new "
@@ -468,7 +484,7 @@ QWidget* MainWindow::buildAboutTab() {
            "<a href='https://www.routeviews.org'>RouteViews</a> (CC BY 4.0), packaged by "
            "<a href='https://github.com/sapics/ip-location-db'>ip-location-db</a>.</p>"
            "<p>Windows packet capture: <a href='https://reqrypt.org/windivert.html'>WinDivert</a> (LGPL v3).</p>"
-           "<p>Licence: MIT.</p>"));
+           "<p>Licence: MIT.</p>").arg(QApplication::applicationVersion()));
     text->setWordWrap(true);
     text->setOpenExternalLinks(true);
     text->setTextFormat(Qt::RichText);

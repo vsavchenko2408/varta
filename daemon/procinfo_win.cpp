@@ -217,4 +217,13 @@ ProcInfo ProcResolver::find(uint8_t proto, const IpAddr& local, uint16_t local_p
     return info;
 }
 
+std::string own_exe_dir() {
+    wchar_t buf[MAX_PATH * 4];
+    const DWORD n = GetModuleFileNameW(nullptr, buf, DWORD(sizeof(buf) / sizeof(buf[0])));
+    if (n == 0 || n >= sizeof(buf) / sizeof(buf[0])) return {};
+    std::string path = ProcResolver::utf8(buf, n);
+    const size_t slash = path.find_last_of("\\/");
+    return slash == std::string::npos ? std::string() : path.substr(0, slash);
+}
+
 }  // namespace vartad

@@ -104,7 +104,7 @@ bool host_matches(const std::string& pattern, const std::string& host) {
     return pattern == host;
 }
 
-static bool same_exe(const std::string& a, const std::string& b) {
+bool same_exe(const std::string& a, const std::string& b) {
 #ifdef _WIN32
     // Windows paths are case-insensitive (C:\Windows vs c:\windows).
     if (a.size() != b.size()) return false;

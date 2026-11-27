@@ -45,6 +45,8 @@ struct MatchInput {
 };
 
 bool host_matches(const std::string& pattern, const std::string& host);
+// Program paths equal (case-insensitive on Windows).
+bool same_exe(const std::string& a, const std::string& b);
 bool rule_matches(const AppRule& r, const MatchInput& in);
 
 class RuleSet {

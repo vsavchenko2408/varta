@@ -1,9 +1,15 @@
 # Builds and tests Varta on Linux and Windows. The Windows job produces a ready-to-install
 # package (artifact "Varta-windows-x64"): vartad.exe + WinDivert + varta-gui.exe with Qt.
+#
+# Releases: push a tag v<version> (the same number as project(VERSION) in CMakeLists.txt).
+# The release job then publishes Varta-<version>-windows-x64.zip as a GitHub Release, which
+# the GUI's update check finds. Release notes: docs/RELEASE_NOTES_v<version>.md if present.
 name: build
 
 on:
   push:
+    branches: ['**']
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -12,6 +18,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Tag matches CMake version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          v=$(sed -n 's/^project(varta VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+          if [ "v$v" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match CMakeLists.txt version $v"; exit 1
+          fi
       - name: Dependencies
         run: |
           sudo apt-get update
@@ -82,3 +95,47 @@ jobs:
         with:
           name: Varta-windows-x64
           path: Varta-windows-x64
+
+      - name: Release ZIP
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $ver = "$env:GITHUB_REF_NAME".TrimStart('v')
+          $name = "Varta-$ver-windows-x64"
+          Rename-Item Varta-windows-x64 $name
+          Compress-Archive -Path $name -DestinationPath "$name.zip"
+
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: release-zip
+          path: Varta-*-windows-x64.zip
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, windows]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-zip
+          path: artifacts
+      - name: Create or update the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ls -la artifacts
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            NOTES="docs/RELEASE_NOTES_${TAG}.md"
+            if [ -f "$NOTES" ]; then
+              gh release create "$TAG" --title "Varta ${TAG#v}" --notes-file "$NOTES"
+            else
+              gh release create "$TAG" --title "Varta ${TAG#v}" --generate-notes
+            fi
+          fi
+          gh release upload "$TAG" artifacts/*.zip --clobber

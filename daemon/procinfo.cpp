@@ -222,4 +222,13 @@ ProcInfo ProcResolver::find(uint8_t proto, const IpAddr& local, uint16_t local_p
     return describe_pid(pid);
 }
 
+std::string own_exe_dir() {
+    char buf[4096];
+    const ssize_t n = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+    if (n <= 0) return {};
+    std::string path(buf, static_cast<size_t>(n));
+    const size_t slash = path.find_last_of('/');
+    return slash == std::string::npos ? std::string() : path.substr(0, slash);
+}
+
 }  // namespace vartad

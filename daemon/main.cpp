@@ -16,7 +16,7 @@
 namespace fs = std::filesystem;
 using namespace vartad;
 
-static const char* kVersion = "0.3.0";
+static const char* kVersion = VARTA_VERSION;
 
 static void usage() {
     std::cout << "vartad " << kVersion << " - Varta interactive application firewall\n\n"

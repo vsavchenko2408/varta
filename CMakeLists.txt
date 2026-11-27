@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
-project(varta VERSION 0.1.0 LANGUAGES CXX)
+project(varta VERSION 0.4.0 LANGUAGES CXX)
+# The one place for the version number. Release tags are v<version> (e.g. v0.4.0):
+# the GUI compares this number with the latest GitHub release to offer updates.
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -10,6 +12,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(MSVC)
   add_compile_options(/utf-8)
 endif()
+
+add_compile_definitions(VARTA_VERSION="${PROJECT_VERSION}")
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release)

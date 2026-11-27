@@ -211,6 +211,7 @@ std::string Connection::pending_key() const {
 // ------------------------------------------------------------------------------ Engine
 
 Engine::Engine(Paths p, EngineHost& host) : paths_(std::move(p)), host_(host) {
+    self_dir = own_exe_dir();
     // Index Varta's built-in tracker categories by domain for O(1) lookups.
     for (const auto& cat : varta::builtin_categories())
         for (const auto& d : cat.domains) trackers_[d] = {cat.id, cat.title};
@@ -301,6 +302,11 @@ void Engine::on_connection(Connection c, uint64_t ticket) {
         decide(c, tickets, r->action == Action::Allow, "rule", r->id);
         return;
     }
+    // Varta's own update check (an explicit rule above can still block it).
+    if (is_self_update_check(c)) {
+        decide(c, tickets, true, "Varta update check");
+        return;
+    }
     if (settings.mode == "allow") {
         decide(c, tickets, true, "mode: allow all");
         return;
@@ -338,6 +344,35 @@ void Engine::on_connection(Connection c, uint64_t ticket) {
     ask["timeout_action"] = settings.timeout_action;
     pending_.emplace(c.id, std::move(pend));
     broadcast(ask);
+}
+
+bool Engine::is_self_update_check(const Connection& c) const {
+    if (c.inbound || c.proto != 6 || c.remote_port != 443 || c.host.empty() || self_dir.empty())
+        return false;
+    if (!c.proc.known()) return false;
+#ifdef _WIN32
+    const char* gui_name = "varta-gui.exe";
+    const char sep = '\\';
+#else
+    const char* gui_name = "varta-gui";
+    const char sep = '/';
+#endif
+    const std::string& exe = c.proc.exe;
+    const size_t slash = exe.find_last_of("/\\");
+    if (slash == std::string::npos) return false;
+    const std::string dir = exe.substr(0, slash), file = exe.substr(slash + 1);
+    if (!same_exe(file, gui_name)) return false;
+    bool dir_ok = same_exe(dir, self_dir);
+#ifndef _WIN32
+    // install-linux.sh: vartad in <prefix>/sbin, varta-gui in <prefix>/bin.
+    const size_t up = self_dir.find_last_of('/');
+    if (!dir_ok && up != std::string::npos) dir_ok = dir == self_dir.substr(0, up) + sep + "bin";
+#else
+    (void)sep;
+#endif
+    if (!dir_ok) return false;
+    return host_matches("api.github.com", c.host) || host_matches("github.com", c.host) ||
+           host_matches("*.githubusercontent.com", c.host);
 }
 
 void Engine::decide(Connection& c, const std::vector<uint64_t>& tickets, bool allow,
@@ -411,7 +446,7 @@ void Engine::broadcast_rules() {
 void Engine::send_state(uint64_t client) {
     Json hello = Json::object();
     hello["type"] = "hello";
-    hello["version"] = "0.3.0";
+    hello["version"] = VARTA_VERSION;
     hello["platform"] = platform;
     hello["settings"] = settings.to_json();
     hello["ipdb_ranges"] = static_cast<uint64_t>(ipdb.ranges());

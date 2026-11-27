@@ -90,6 +90,9 @@ struct Connection {
     std::string pending_key() const;
 };
 
+// Directory of the running executable (procinfo*.cpp), "" if unknown.
+std::string own_exe_dir();
+
 class EngineHost {
 public:
     virtual ~EngineHost() = default;
@@ -131,6 +134,12 @@ public:
 
     // Filled by the host for logging; also exposed in "hello".
     std::string platform = "linux";
+
+    // Folder of the running vartad executable. Varta's own GUI from this folder (or, on
+    // Linux, the sibling bin/ folder) may reach GitHub to check for updates without a prompt.
+    // Set automatically; tests override it.
+    std::string self_dir;
+    bool is_self_update_check(const Connection& c) const;
 
 private:
     struct Pending {

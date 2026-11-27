@@ -11,7 +11,7 @@
 
 using namespace varta;
 
-static const char* kVersion = "0.1.0";
+static const char* kVersion = VARTA_VERSION;
 
 static void usage() {
     std::cout <<

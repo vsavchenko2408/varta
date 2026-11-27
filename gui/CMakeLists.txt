@@ -7,6 +7,8 @@ qt_add_executable(varta-gui
   prompt.hpp prompt.cpp
   models.hpp models.cpp
   mainwindow.hpp mainwindow.cpp
+  updateinfo.hpp updateinfo.cpp
+  updater.hpp updater.cpp
 )
 target_link_libraries(varta-gui PRIVATE Qt6::Widgets Qt6::Network)
 # A windowed (not console) program on Windows and a proper .app bundle on macOS.
@@ -25,6 +27,14 @@ if(Qt6LinguistTools_FOUND)
     LUPDATE_OPTIONS -no-obsolete)
 else()
   message(STATUS "Qt6 LinguistTools not found - GUI will be English only")
+endif()
+
+# Unit test for the update-check logic (version comparison, release JSON parsing).
+if(VARTA_BUILD_TESTS)
+  add_executable(varta_gui_tests ../tests/test_update.cpp updateinfo.cpp)
+  target_include_directories(varta_gui_tests PRIVATE .)
+  target_link_libraries(varta_gui_tests PRIVATE Qt6::Core)
+  add_test(NAME varta_gui_tests COMMAND varta_gui_tests)
 endif()
 
 install(TARGETS varta-gui RUNTIME DESTINATION bin BUNDLE DESTINATION .)

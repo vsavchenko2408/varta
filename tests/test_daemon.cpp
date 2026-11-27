@@ -388,6 +388,36 @@ static void test_engine() {
     std::filesystem::remove_all(dir);
 }
 
+// Varta's own GUI may reach GitHub (update check) without a prompt; nothing else may.
+static void test_self_update() {
+    Paths paths;
+    FakeHost host;
+    Engine e(paths, host);
+    CHECK(!e.self_dir.empty());  // the test binary's own folder
+#ifdef _WIN32
+    e.self_dir = "C:\\Program Files\\Varta";
+    const char* gui = "C:\\Program Files\\Varta\\varta-gui.exe";
+    const char* fake = "C:\\Users\\x\\Downloads\\varta-gui.exe";
+#else
+    e.self_dir = "/usr/local/sbin";
+    const char* gui = "/usr/local/bin/varta-gui";
+    const char* fake = "/home/x/varta-gui";
+#endif
+    Connection c = conn(gui, "140.82.121.6", 443);
+    c.host = "api.github.com";
+    CHECK(e.is_self_update_check(c));
+    c.host = "release-assets.githubusercontent.com";
+    CHECK(e.is_self_update_check(c));
+    c.host = "evil.example.com";
+    CHECK(!e.is_self_update_check(c));
+    c.host = "api.github.com";
+    c.remote_port = 80;
+    CHECK(!e.is_self_update_check(c));
+    Connection other = conn(fake, "140.82.121.6", 443);
+    other.host = "api.github.com";
+    CHECK(!e.is_self_update_check(other));  // same name, wrong folder
+}
+
 #ifdef _WIN32
 #include "windows_daemon.hpp"
 static void test_windows_filter() {
@@ -436,6 +466,7 @@ int main() {
     test_procinfo();
     test_settings_and_nft();
     test_engine();
+    test_self_update();
 #ifdef _WIN32
     test_windows_filter();
 #endif

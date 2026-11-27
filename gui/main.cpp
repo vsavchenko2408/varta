@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
     QApplication app(argc, argv);
     QApplication::setApplicationName("varta-gui");
     QApplication::setOrganizationName("Varta");
-    QApplication::setApplicationVersion("0.2.0");
+    QApplication::setApplicationVersion(VARTA_VERSION);
     QApplication::setQuitOnLastWindowClosed(false);  // lives in the tray
 
     QCommandLineParser cli;
@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
     if (isDemo) w.setWindowTitle(w.windowTitle() + " - " + QObject::tr("demo"));
     if (!cli.isSet(hidden) || !QSystemTrayIcon::isSystemTrayAvailable()) w.show();
     if (auto* d = qobject_cast<DemoBackend*>(backend)) d->start();
+    if (!isDemo) w.startUpdateCheck();
 
     if (cli.isSet(shots)) {
         // Render every screen to PNG - handy for the README and for checking the design.

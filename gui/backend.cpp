@@ -213,7 +213,7 @@ DemoBackend::DemoBackend(QObject* parent) : Backend(parent) {
 void DemoBackend::start() {
     emit connectedChanged(true);
     emit hello({{"type", "hello"},
-                {"version", "0.2.0"},
+                {"version", VARTA_VERSION},
                 {"settings", settings_},
                 {"ipdb_ranges", 1216826},
                 {"ipdb_attribution",

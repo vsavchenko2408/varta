@@ -125,6 +125,19 @@ Set-ExecutionPolicy -Scope Process Bypass
 ```
 Видалення: `.\uninstall.ps1` (`-Purge` — разом із правилами). Аварійна зупинка: `sc stop vartad`.
 
+**Оновлення.** Готові версії публікуються на сторінці
+[Releases](https://github.com/vsavchenko2408/varta/releases) (`Varta-<версія>-windows-x64.zip`).
+`varta-gui` раз на день робить один анонімний запит до `api.github.com` і, якщо є новіша версія,
+показує вікно з описом змін. Кнопка «Завантажити й встановити» завантажує ZIP, звіряє його
+SHA-256 з тим, що публікує GitHub, і запускає той самий `install.cmd` (UAC, заміна файлів,
+перезапуск служби). Правила й налаштування в `%ProgramData%\Varta` зберігаються, база IP повторно
+не завантажується. Служба пропускає цей запит без питання лише для `varta-gui` з теки Varta і
+лише до `github.com`/`*.githubusercontent.com` на порт 443; власне правило «Заборонити» має
+пріоритет. Вимкнути перевірку: «Налаштування → Оновлення».
+
+Новий реліз (для розробника): змінити `project(varta VERSION …)` у `CMakeLists.txt`, за бажанням
+додати `docs/RELEASE_NOTES_v<версія>.md`, потім `git tag v<версія> && git push --tags`.
+
 Збірка вручну: Visual Studio 2022 + Qt 6.8 (MSVC 2022 64-bit) + розпакований
 `WinDivert-2.2.2-A.zip` у `third_party/WinDivert`:
 ```bat
@@ -144,8 +157,6 @@ ctest --test-dir build -C Release
 - **Антивіруси й Memory Integrity.** Деякі антивіруси насторожено ставляться до WinDivert (його
   використовують і легітимні, і шкідливі програми). Якщо служба не стартує, причину видно в
   `vartad.log` (наприклад «driver blocked»).
-- **Не перевірено на справжній Windows.** Windows-частину зібрано й покрито модульними тестами (вони
-  проганяються на GitHub Actions на `windows-2022`), але запустити її в живу я не мав де.
 
 <p align="center">
   <img src="docs/screenshots/connections-uk.png" width="49%">

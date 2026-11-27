@@ -21,6 +21,7 @@ class QTableView;
 class QTreeWidget;
 class QTabWidget;
 class PromptDialog;
+class UpdateChecker;
 
 // Add / edit a rule by hand.
 class RuleDialog : public QDialog {
@@ -47,6 +48,7 @@ public:
     MainWindow(Backend* backend, QWidget* parent = nullptr);
     PromptDialog* prompt() const { return prompt_; }
     void showTab(int index);
+    void startUpdateCheck();  // daily check for a new release (if enabled)
 
 protected:
     void closeEvent(QCloseEvent* e) override;
@@ -106,6 +108,7 @@ private:
     QComboBox* theme_;
     QCheckBox* notifyBlocked_;
     QLabel* ipdbInfo_;
+    UpdateChecker* updates_ = nullptr;
     bool applyingSettings_ = false;
 
     QString mode_ = "ask";

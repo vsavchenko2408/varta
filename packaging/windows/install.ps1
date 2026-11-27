@@ -1,5 +1,6 @@
 # Installs Varta on Windows: run in an Administrator PowerShell from the unpacked folder.
 #   Set-ExecutionPolicy -Scope Process Bypass; .\install.ps1
+param([switch]$UpdateDb)
 $ErrorActionPreference = "Stop"
 $src = $PSScriptRoot
 $dst = Join-Path $env:ProgramFiles "Varta"
@@ -36,9 +37,16 @@ Get-ChildItem -Recurse -File $src | ForEach-Object {
     Copy-Item -Force $_.FullName $target
 }
 
-Write-Host "==> Downloading the offline IP database (~90 MB)"
-& (Join-Path $dst "vartad.exe") --update-db
-if ($LASTEXITCODE -ne 0) { Write-Warning "IP database download failed - run 'vartad --update-db' later." }
+# The IP database lives in %ProgramData%\Varta\ipdb and survives updates: download it only
+# on the first install (or with -UpdateDb). Refresh later with: vartad --update-db
+$ipdb = Join-Path $env:ProgramData "Varta\ipdb"
+if ($UpdateDb -or -not (Test-Path $ipdb) -or -not (Get-ChildItem $ipdb -File -ErrorAction SilentlyContinue)) {
+    Write-Host "==> Downloading the offline IP database (~90 MB)"
+    & (Join-Path $dst "vartad.exe") --update-db
+    if ($LASTEXITCODE -ne 0) { Write-Warning "IP database download failed - run 'vartad --update-db' later." }
+} else {
+    Write-Host "==> IP database already present (refresh: vartad --update-db)"
+}
 
 Write-Host "==> Installing and starting the service"
 & (Join-Path $dst "vartad.exe") --install-service
