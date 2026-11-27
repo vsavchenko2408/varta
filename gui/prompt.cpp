@@ -6,13 +6,31 @@
 #include <QFrame>
 #include <QGridLayout>
 #include <QHBoxLayout>
-#include <QHostInfo>
+#include <QDnsLookup>
+#include <QHostAddress>
 #include <QLabel>
 #include <QPushButton>
 #include <QTimer>
 #include <QVBoxLayout>
 
 #include "style.hpp"
+
+// "1.2.3.4" -> "4.3.2.1.in-addr.arpa", IPv6 -> nibble format under ip6.arpa.
+static QString reverseName(const QString& ip) {
+    QHostAddress a(ip);
+    if (a.protocol() == QAbstractSocket::IPv4Protocol) {
+        const quint32 v = a.toIPv4Address();
+        return QString("%1.%2.%3.%4.in-addr.arpa").arg(v & 0xff).arg((v >> 8) & 0xff).arg((v >> 16) & 0xff).arg(v >> 24);
+    }
+    if (a.protocol() == QAbstractSocket::IPv6Protocol) {
+        const Q_IPV6ADDR b = a.toIPv6Address();
+        QString out;
+        for (int i = 15; i >= 0; --i)
+            out += QString("%1.%2.").arg(b[i] & 0xf, 0, 16).arg(b[i] >> 4, 0, 16);
+        return out + "ip6.arpa";
+    }
+    return {};
+}
 
 static QLabel* fieldLabel(const QString& text) {
     auto* l = new QLabel(text);
@@ -233,13 +251,22 @@ void PromptDialog::showConnection(const QJsonObject& c, int queued) {
     rdns_->setVisible(false);
     if (host.isEmpty() && special.isEmpty()) {
         // Reverse DNS as a hint; done by the GUI so the daemon never blocks on it.
-        const qint64 forId = id_;
-        QHostInfo::lookupHost(ip, this, [this, forId, ip](const QHostInfo& info) {
-            if (forId != id_ || info.error() != QHostInfo::NoError) return;
-            if (info.hostName().isEmpty() || info.hostName() == ip) return;
-            rdns_->setText(tr("reverse DNS: %1").arg(info.hostName()));
-            rdns_->setVisible(true);
-        });
+        // A plain PTR query (QDnsLookup) - NOT QHostInfo/getnameinfo: on Windows that falls
+        // back to a NetBIOS node-status query (UDP 137) sent straight to the remote IP.
+        const QString ptr = reverseName(ip);
+        if (!ptr.isEmpty()) {
+            const qint64 forId = id_;
+            auto* dns = new QDnsLookup(QDnsLookup::PTR, ptr, this);
+            connect(dns, &QDnsLookup::finished, this, [this, dns, forId] {
+                dns->deleteLater();
+                if (forId != id_ || dns->error() != QDnsLookup::NoError || dns->pointerRecords().isEmpty()) return;
+                QString name = dns->pointerRecords().first().value();
+                if (name.endsWith('.')) name.chop(1);
+                rdns_->setText(tr("reverse DNS: %1").arg(name));
+                rdns_->setVisible(true);
+            });
+            dns->lookup();
+        }
     }
 
     const QString proto = c.value("proto").toString();
