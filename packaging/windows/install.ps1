@@ -18,6 +18,7 @@ if ($sig.Status -ne "Valid") { throw "WinDivert64.sys signature is not valid: $(
 Write-Host "WinDivert64.sys signed by: $($sig.SignerCertificate.Subject)"
 
 # Stop an older version first.
+Get-Process varta-gui -ErrorAction SilentlyContinue | Stop-Process -Force
 if (Get-Service vartad -ErrorAction SilentlyContinue) {
     Write-Host "==> Stopping the old vartad service"
     & (Join-Path $dst "vartad.exe") --uninstall-service | Out-Host
@@ -25,7 +26,15 @@ if (Get-Service vartad -ErrorAction SilentlyContinue) {
 
 Write-Host "==> Copying files to $dst"
 New-Item -ItemType Directory -Force $dst | Out-Null
-Copy-Item -Recurse -Force (Join-Path $src "*") $dst
+# Copy file by file and skip unchanged ones: Windows keeps the WinDivert driver loaded (and
+# its file locked) after vartad stops, so overwriting an identical WinDivert64.sys would fail.
+Get-ChildItem -Recurse -File $src | ForEach-Object {
+    $rel = $_.FullName.Substring($src.Length).TrimStart('\')
+    $target = Join-Path $dst $rel
+    if ((Test-Path $target) -and ((Get-FileHash $target).Hash -eq (Get-FileHash $_.FullName).Hash)) { return }
+    New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null
+    Copy-Item -Force $_.FullName $target
+}
 
 Write-Host "==> Downloading the offline IP database (~90 MB)"
 & (Join-Path $dst "vartad.exe") --update-db
