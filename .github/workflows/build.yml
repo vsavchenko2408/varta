@@ -173,6 +173,18 @@ jobs:
           ditto -c -k --keepParent "$NAME" "$NAME.zip"
           echo "PKG=$NAME" >> "$GITHUB_ENV"
 
+      - name: Install test (install.sh, launchd service, GUI start, uninstall.sh)
+        run: |
+          set -x
+          sudo VARTA_SKIP_DB=1 sh "$PKG/install.sh"
+          sleep 8
+          sudo launchctl print system/com.varta.vartad | grep -E "state = running"
+          test -S /var/run/varta/vartad.sock
+          pgrep -x varta-gui || { echo "::warning::GUI did not start (no logged-in session on this runner?)"; }
+          sudo cat /var/log/vartad.log
+          sudo sh "$PKG/uninstall.sh" --purge
+          ! test -e /Applications/Varta.app
+
       - uses: actions/upload-artifact@v4
         with:
           name: Varta-macos-x64

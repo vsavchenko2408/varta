@@ -27,7 +27,9 @@ chmod -R go-w "$APP"
 xattr -dr com.apple.quarantine "$APP" 2>/dev/null || true
 
 mkdir -p "$DATA"
-if [ "$1" = "--update-db" ] || [ ! -f "$DATA/ipdb/asn-ipv4.csv" ]; then
+if [ -n "$VARTA_SKIP_DB" ]; then
+    echo "==> Skipping the IP database (VARTA_SKIP_DB)"
+elif [ "$1" = "--update-db" ] || [ ! -f "$DATA/ipdb/asn-ipv4.csv" ]; then
     echo "==> Downloading the offline IP database (~90 MB)"
     "$APP/Contents/MacOS/vartad" --update-db || echo "IP database download failed - run later: sudo $APP/Contents/MacOS/vartad --update-db"
 else
