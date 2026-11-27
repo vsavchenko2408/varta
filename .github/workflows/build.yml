@@ -1,6 +1,9 @@
 # Builds and tests Varta on Linux and Windows. The Windows job produces a ready-to-install
 # package (artifact "Varta-windows-x64"): vartad.exe + WinDivert + varta-gui.exe with Qt.
 #
+# The macOS job builds Varta-<version>-macos-x64.zip (Varta.app + install.sh) and runs vartad
+# as root on the runner to check packet capture and pf blocking for real.
+#
 # Releases: push a tag v<version> (the same number as project(VERSION) in CMakeLists.txt).
 # The release job then publishes Varta-<version>-windows-x64.zip as a GitHub Release, which
 # the GUI's update check finds. Release notes: docs/RELEASE_NOTES_v<version>.md if present.
@@ -108,13 +111,84 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/v')
         with:
-          name: release-zip
+          name: release-zip-windows
           path: Varta-*-windows-x64.zip
+          if-no-files-found: error
+
+  macos:
+    # Intel runner: the package is built for x86_64 Macs (macOS 12 or newer).
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.5.3"
+          cache: true
+
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" \
+                -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
+          cmake --build build -j "$(sysctl -n hw.ncpu)"
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Smoke test (vartad as root, pf and packet capture for real)
+        run: |
+          set -x
+          mkdir -p /tmp/vcfg
+          # Only curl is denied; everything else (the runner itself!) passes: no GUI -> allow.
+          echo '{"version":1,"rules":[{"enabled":true,"action":"deny","duration":"forever","exe":"/usr/bin/curl"}]}' \
+               > /tmp/vcfg/app-rules.json
+          sudo ./build/vartad --verbose --config-dir /tmp/vcfg --data-dir /tmp/vdata --run-dir /tmp/vrun \
+               > /tmp/vartad.log 2>&1 &
+          sleep 6
+          curl -s -m 10 -o /dev/null http://1.1.1.1/ || true   # seen by vartad and denied
+          sleep 3
+          blocked=0
+          curl -s -m 10 -o /dev/null http://1.1.1.1/ || blocked=1
+          sudo pfctl -a com.apple/varta_ask -t varta_deny -T show || true
+          sudo pkill -INT -x vartad || true
+          sleep 3
+          cat /tmp/vartad.log
+          grep -q "deny  /usr/bin/curl -> .*1.1.1.1:80" /tmp/vartad.log
+          test "$blocked" = 1
+          # rules are removed again on shutdown
+          test -z "$(sudo pfctl -a com.apple/varta_ask -s rules 2>/dev/null)"
+
+      - name: Package
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then VER="${GITHUB_REF_NAME#v}"; else VER=dev; fi
+          NAME="Varta-$VER-macos-x64"
+          "$QT_ROOT_DIR/bin/macdeployqt" build/gui/varta-gui.app
+          cp build/vartad build/gui/varta-gui.app/Contents/MacOS/
+          mkdir "$NAME"
+          ditto build/gui/varta-gui.app "$NAME/Varta.app"
+          # Ad-hoc signature over the whole bundle (vartad was added after macdeployqt).
+          codesign --force --deep -s - "$NAME/Varta.app"
+          cp packaging/macos/install.sh packaging/macos/uninstall.sh LICENSE README.md "$NAME/"
+          ditto -c -k --keepParent "$NAME" "$NAME.zip"
+          echo "PKG=$NAME" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Varta-macos-x64
+          path: ${{ env.PKG }}.zip
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: release-zip-macos
+          path: ${{ env.PKG }}.zip
           if-no-files-found: error
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [linux, windows]
+    needs: [linux, windows, macos]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -122,7 +196,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: release-zip
+          pattern: release-zip-*
+          merge-multiple: true
           path: artifacts
       - name: Create or update the GitHub Release
         env:

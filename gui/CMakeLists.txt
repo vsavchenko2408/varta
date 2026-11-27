@@ -13,7 +13,11 @@ qt_add_executable(varta-gui
 target_link_libraries(varta-gui PRIVATE Qt6::Widgets Qt6::Network)
 # A windowed (not console) program on Windows and a proper .app bundle on macOS.
 # Without this Windows opens a terminal next to the GUI and closing it kills the app.
-set_target_properties(varta-gui PROPERTIES WIN32_EXECUTABLE ON MACOSX_BUNDLE ON)
+set_target_properties(varta-gui PROPERTIES WIN32_EXECUTABLE ON MACOSX_BUNDLE ON
+  MACOSX_BUNDLE_BUNDLE_NAME "Varta"
+  MACOSX_BUNDLE_GUI_IDENTIFIER "com.varta.gui"
+  MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+  MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}")
 if(NOT MSVC)
   target_compile_options(varta-gui PRIVATE -Wall -Wextra)
 endif()

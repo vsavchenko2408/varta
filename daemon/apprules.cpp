@@ -242,6 +242,12 @@ void RuleSet::add_defaults() {
         "C:\\Windows\\System32\\lsass.exe",
         "C:\\Windows\\System32\\services.exe",
     };
+#elif defined(__APPLE__)
+    static const char* system_allow[] = {
+        "/usr/sbin/mDNSResponder",  // DNS for every program
+        "/usr/libexec/timed",       // clock synchronisation
+        "/usr/libexec/trustd",      // certificate revocation checks
+    };
 #else
     static const char* system_allow[] = {
         "/usr/lib/systemd/systemd-resolved", "/usr/lib/systemd/systemd-timesyncd",

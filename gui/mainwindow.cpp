@@ -556,9 +556,12 @@ void MainWindow::onHello(const QJsonObject& m) {
     allowed_ = m.value("allowed").toInteger();
     denied_ = m.value("denied").toInteger();
     attribution_ = m.value("ipdb_attribution").toString();
+    prompt_->setPlatform(m.value("platform").toString());
     const qint64 ranges = m.value("ipdb_ranges").toInteger();
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN)
     const QString updateCmd = "vartad --update-db";
+#elif defined(Q_OS_MACOS)
+    const QString updateCmd = "sudo /Applications/Varta.app/Contents/MacOS/vartad --update-db";
 #else
     const QString updateCmd = "sudo vartad --update-db";
 #endif

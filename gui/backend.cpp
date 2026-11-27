@@ -71,6 +71,11 @@ SocketBackend::SocketBackend(const QString& path, QObject* parent) : Backend(par
             lastError_ = tr("Permission denied by the vartad service.");
         else if (e == QLocalSocket::ServerNotFoundError || e == QLocalSocket::ConnectionRefusedError)
             lastError_ = tr("The vartad service is not running (as Administrator: sc start vartad).");
+#elif defined(Q_OS_MACOS)
+        if (e == QLocalSocket::SocketAccessError)
+            lastError_ = tr("Permission denied - only administrator accounts can control Varta.");
+        else if (e == QLocalSocket::ServerNotFoundError || e == QLocalSocket::ConnectionRefusedError)
+            lastError_ = tr("vartad is not running (sudo launchctl kickstart -k system/com.varta.vartad).");
 #else
         if (e == QLocalSocket::SocketAccessError)
             lastError_ = tr("Permission denied - add yourself to the 'varta' group and log in again.");

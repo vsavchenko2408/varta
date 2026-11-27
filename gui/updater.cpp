@@ -269,6 +269,34 @@ void UpdateDialog::launchInstaller(const QString& zip) {
     }
     // install.ps1 closes the GUI itself before replacing files; nothing else to do here.
     accept();
+#elif defined(Q_OS_MACOS)
+    // A small script unpacks the ZIP with ditto and runs the package's install.sh; macOS asks
+    // for an administrator password through its own dialog (osascript ... with administrator
+    // privileges). Paths are single-quoted for the shell, so spaces cannot break them.
+    auto sq = [](QString s) { return "'" + s.replace("'", "'\\''") + "'"; };
+    const QString dest = QDir(QDir::tempPath()).filePath(
+        QStringLiteral("varta-update-%1").arg(QDateTime::currentMSecsSinceEpoch()));
+    const QString scriptPath = dest + ".sh";
+    QFile f(scriptPath);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        status_->setText(tr("Could not start the installer. Unpack %1 and run install.sh.").arg(zip));
+        return;
+    }
+    f.write(QStringLiteral("#!/bin/sh\nset -e\n"
+                           "/usr/bin/ditto -x -k %1 %2\n"
+                           "inst=$(/usr/bin/find %2 -maxdepth 2 -name install.sh | /usr/bin/head -n 1)\n"
+                           "[ -n \"$inst\" ] || { echo 'install.sh not found'; exit 1; }\n"
+                           "/bin/sh \"$inst\" >/tmp/varta-update.log 2>&1 &\n")
+                .arg(sq(zip), sq(dest))
+                .toUtf8());
+    f.close();
+    const QString apple = QStringLiteral("do shell script \"/bin/sh %1\" with administrator privileges")
+                              .arg(sq(scriptPath).replace("\\", "\\\\").replace("\"", "\\\""));
+    if (!QProcess::startDetached("/usr/bin/osascript", {"-e", apple})) {
+        status_->setText(tr("Could not start the installer. Unpack %1 and run install.sh.").arg(zip));
+        return;
+    }
+    accept();
 #else
     QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(zip).absolutePath()));
     accept();

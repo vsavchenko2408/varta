@@ -29,6 +29,8 @@ int main(int argc, char** argv) {
 #ifdef Q_OS_WIN
     // QLocalSocket maps a plain name to the named pipe \\.\pipe\vartad.
     QCommandLineOption socket("socket", "vartad pipe name.", "name", "vartad");
+#elif defined(Q_OS_MACOS)
+    QCommandLineOption socket("socket", "vartad socket path.", "path", "/var/run/varta/vartad.sock");
 #else
     QCommandLineOption socket("socket", "vartad socket path.", "path", "/run/varta/vartad.sock");
 #endif

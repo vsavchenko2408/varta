@@ -31,7 +31,7 @@ QString normalizeVersion(const QString& tag);
 bool isNewerVersion(const QString& remote, const QString& current);
 
 // File-name ending of the download for the running platform:
-// "-windows-x64.zip" on Windows, empty elsewhere (Linux users get the release page).
+// "-windows-x64.zip" on Windows, "-macos-x64.zip" on macOS, empty on Linux (release page).
 QString platformAssetSuffix();
 
 // Parses the JSON from kLatestReleaseApi and picks the asset whose name ends with

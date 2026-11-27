@@ -144,6 +144,13 @@ PromptDialog::PromptDialog(QWidget* parent) : QDialog(parent) {
     warning_->setContentsMargins(12, 8, 12, 8);
     body->addWidget(warning_);
 
+    platformNote_ = new QLabel(tr("macOS: the connection has already started. \"Deny\" cuts it and blocks this "
+                                  "address for every program."));
+    platformNote_->setWordWrap(true);
+    platformNote_->setObjectName("muted");
+    platformNote_->setVisible(false);
+    body->addWidget(platformNote_);
+
     // ---- what the answer applies to
     auto* opts = new QGridLayout;
     opts->setHorizontalSpacing(10);
@@ -340,3 +347,5 @@ void PromptDialog::closeEvent(QCloseEvent* e) {
     e->ignore();
     finish(false);
 }
+
+void PromptDialog::setPlatform(const QString& platform) { platformNote_->setVisible(platform == "macos"); }

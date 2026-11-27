@@ -1,4 +1,4 @@
-// vartad - Varta interactive application firewall daemon (Linux and Windows).
+// vartad - Varta interactive application firewall daemon (Linux, Windows, macOS).
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -9,6 +9,8 @@
 
 #ifdef _WIN32
 #include "windows_daemon.hpp"
+#elif defined(__APPLE__)
+#include "mac_daemon.hpp"
 #else
 #include "linux_daemon.hpp"
 #endif
@@ -26,6 +28,10 @@ static void usage() {
                  "  --uninstall-service stop and remove the Windows service\n"
                  "  --console           run in this console instead of as a service (Ctrl+C stops)\n"
                  "  --service           (used by the Service Control Manager)\n"
+#elif defined(__APPLE__)
+                 "  (no options)        run the daemon (as root; normally started by launchd)\n"
+                 "  --verbose           log every allow/deny decision\n"
+                 "  --print-pf          print the pf rules vartad installs\n"
 #else
                  "  (no options)        run the daemon (as root; normally started by systemd)\n"
                  "  --print-nft         print the nftables rules vartad installs\n"
@@ -104,7 +110,7 @@ int main(int argc, char** argv) {
     Paths paths;
     std::string lookup_ip;
     bool do_update = false, print_nft = false;
-    bool install_svc = false, uninstall_svc = false, console = false, service = false;
+    bool install_svc = false, uninstall_svc = false, console = false, service = false, verbose = false;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
         auto value = [&](std::string& dst) {
@@ -117,7 +123,8 @@ int main(int argc, char** argv) {
         if (a == "-h" || a == "--help") { usage(); return 0; }
         else if (a == "--version") { std::cout << "vartad " << kVersion << "\n"; return 0; }
         else if (a == "--update-db") do_update = true;
-        else if (a == "--print-nft") print_nft = true;
+        else if (a == "--print-nft" || a == "--print-pf") print_nft = true;
+        else if (a == "--verbose" || a == "-v") verbose = true;
         else if (a == "--lookup") value(lookup_ip);
         else if (a == "--config-dir") value(paths.config_dir);
         else if (a == "--data-dir") value(paths.data_dir);
@@ -134,15 +141,23 @@ int main(int argc, char** argv) {
     if (!lookup_ip.empty()) return lookup(paths, lookup_ip);
 
 #ifdef _WIN32
-    (void)print_nft;
+    (void)print_nft; (void)verbose;
     if (install_svc) return WindowsDaemon::install_service();
     if (uninstall_svc) return WindowsDaemon::uninstall_service();
     if (service) return WindowsDaemon::run_as_service(paths);
     (void)console;  // console is the default when started by hand
     WindowsDaemon d(paths);
     return d.run_console();
-#else
+#elif defined(__APPLE__)
     (void)install_svc; (void)uninstall_svc; (void)console; (void)service;
+    if (print_nft) {
+        std::cout << MacDaemon::pf_rules();
+        return 0;
+    }
+    MacDaemon d(paths, verbose);
+    return d.run();
+#else
+    (void)install_svc; (void)uninstall_svc; (void)console; (void)service; (void)verbose;
     if (print_nft) {
         Settings s;
         s.load(paths.settings());

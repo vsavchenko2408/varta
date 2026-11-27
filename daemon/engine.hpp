@@ -38,7 +38,13 @@ struct ProcInfo {
 struct Settings {
     std::string mode = "ask";            // ask | allow (log only) | deny (block unknown)
     int prompt_timeout = 30;             // seconds
+#ifdef __APPLE__
+    // macOS (no Network Extension): the connection is already running while we ask, and a
+    // deny blocks the address for every program - so an unanswered prompt does not block.
+    std::string timeout_action = "allow";
+#else
     std::string timeout_action = "deny"; // when the user does not answer in time
+#endif
     std::string no_gui_action = "allow"; // when no GUI is connected (boot, no login yet)
     bool ask_inbound = true;             // also ask for new incoming connections
     bool auto_allow_dns = true;          // let DNS (port 53) through without asking
@@ -57,6 +63,10 @@ struct Paths {
     std::string data_dir;    // %ProgramData%\Varta
     std::string run_dir;     // unused (named pipe \\.\pipe\vartad)
     Paths();
+#elif defined(__APPLE__)
+    std::string config_dir = "/Library/Application Support/Varta";
+    std::string data_dir = "/Library/Application Support/Varta";
+    std::string run_dir = "/var/run/varta";
 #else
     std::string config_dir = "/etc/varta";
     std::string data_dir = "/var/lib/varta";

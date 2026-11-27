@@ -21,8 +21,10 @@ bool isNewerVersion(const QString& remote, const QString& current) {
 }
 
 QString platformAssetSuffix() {
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN)
     return QStringLiteral("-windows-x64.zip");
+#elif defined(Q_OS_MACOS)
+    return QStringLiteral("-macos-x64.zip");
 #else
     return {};
 #endif

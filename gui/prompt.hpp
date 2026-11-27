@@ -16,6 +16,9 @@ public:
 
     void showConnection(const QJsonObject& ask, int queued);
     void setQueued(int queued);
+    // "macos": connections are already running when asked and a deny blocks the address
+    // for every program - say so in the dialog.
+    void setPlatform(const QString& platform);
     qint64 currentId() const { return id_; }
 
 signals:
@@ -50,6 +53,7 @@ private:
     QLabel* country_;
     QLabel* rdns_;
     QLabel* warning_;
+    QLabel* platformNote_ = nullptr;
     QComboBox* scope_;
     QComboBox* duration_;
     QPushButton* allow_;

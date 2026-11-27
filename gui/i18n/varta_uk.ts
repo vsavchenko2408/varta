@@ -378,7 +378,7 @@
         <translation>Тема й мова зміняться після перезапуску інтерфейсу.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="566"/>
+        <location filename="../mainwindow.cpp" line="569"/>
         <source>IP database not installed - run: %1</source>
         <translation>База IP не встановлена — виконайте: %1</translation>
     </message>
@@ -403,82 +403,82 @@
         <translation>Вийти</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="565"/>
+        <location filename="../mainwindow.cpp" line="568"/>
         <source>IP database: %L1 address ranges loaded. %2</source>
         <translation>База IP: завантажено %L1 діапазонів адрес. %2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="576"/>
+        <location filename="../mainwindow.cpp" line="579"/>
         <source>Blocked %1</source>
         <translation>Заблоковано %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="674"/>
+        <location filename="../mainwindow.cpp" line="677"/>
         <source>Rules (%1)</source>
         <translation>Правила (%1)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="686"/>
+        <location filename="../mainwindow.cpp" line="689"/>
         <source>Varta: %1 allowed, %2 blocked</source>
         <translation>Varta: дозволено %1, заблоковано %2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="687"/>
+        <location filename="../mainwindow.cpp" line="690"/>
         <source>Varta: not connected to vartad</source>
         <translation>Varta: немає зв’язку з vartad</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="691"/>
+        <location filename="../mainwindow.cpp" line="694"/>
         <source>%L1 allowed</source>
         <translation>дозволено %L1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="692"/>
+        <location filename="../mainwindow.cpp" line="695"/>
         <source>%L1 blocked</source>
         <translation>заблоковано %L1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="694"/>
+        <location filename="../mainwindow.cpp" line="697"/>
         <source>Connected: %1</source>
         <translation>Під’єднано: %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="698"/>
+        <location filename="../mainwindow.cpp" line="701"/>
         <source>Not connected to vartad. %1</source>
         <translation>Немає зв’язку з vartad. %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="712"/>
+        <location filename="../mainwindow.cpp" line="715"/>
         <source>Always allow %1 → %2</source>
         <translation>Завжди дозволяти %1 → %2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="713"/>
+        <location filename="../mainwindow.cpp" line="716"/>
         <source>Always block %1 → %2</source>
         <translation>Завжди блокувати %1 → %2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="714"/>
+        <location filename="../mainwindow.cpp" line="717"/>
         <source>Always block %1 (everything)</source>
         <translation>Завжди блокувати %1 (усе)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="717"/>
+        <location filename="../mainwindow.cpp" line="720"/>
         <source>Copy IP address</source>
         <translation>Копіювати IP-адресу</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="719"/>
+        <location filename="../mainwindow.cpp" line="722"/>
         <source>Copy host name</source>
         <translation>Копіювати ім’я хоста</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="720"/>
+        <location filename="../mainwindow.cpp" line="723"/>
         <source>Copy program path</source>
         <translation>Копіювати шлях до програми</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="736"/>
+        <location filename="../mainwindow.cpp" line="739"/>
         <source>Rule added.</source>
         <translation>Правило додано.</translation>
     </message>
@@ -511,147 +511,152 @@
         <translation>Країна</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="152"/>
+        <location filename="../prompt.cpp" line="147"/>
+        <source>macOS: the connection has already started. &quot;Deny&quot; cuts it and blocks this address for every program.</source>
+        <translation>macOS: з’єднання вже почалося. «Заборонити» обриває його й блокує цю адресу для всіх програм.</translation>
+    </message>
+    <message>
+        <location filename="../prompt.cpp" line="159"/>
         <source>Forever</source>
         <translation>Назавжди</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="153"/>
+        <location filename="../prompt.cpp" line="160"/>
         <source>Until vartad restarts</source>
         <translation>До перезапуску vartad</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="154"/>
+        <location filename="../prompt.cpp" line="161"/>
         <source>Apply to</source>
         <translation>Застосувати до</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="156"/>
+        <location filename="../prompt.cpp" line="163"/>
         <source>Remember</source>
         <translation>Пам’ятати</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="164"/>
+        <location filename="../prompt.cpp" line="171"/>
         <source>Deny</source>
         <translation>Заборонити</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="166"/>
+        <location filename="../prompt.cpp" line="173"/>
         <source>Allow</source>
         <translation>Дозволити</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="200"/>
+        <location filename="../prompt.cpp" line="207"/>
         <source>Only this connection (once)</source>
         <translation>Лише це з’єднання (один раз)</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="203"/>
+        <location filename="../prompt.cpp" line="210"/>
         <source>%1 → %2</source>
         <translation>%1 → %2</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="205"/>
+        <location filename="../prompt.cpp" line="212"/>
         <source>%1 → *.%2 (whole domain)</source>
         <translation>%1 → *.%2 (увесь домен)</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="207"/>
+        <location filename="../prompt.cpp" line="214"/>
         <source>%1 → %2 (this IP)</source>
         <translation>%1 → %2 (ця IP)</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="208"/>
+        <location filename="../prompt.cpp" line="215"/>
         <source>%1 → port %2 anywhere</source>
         <translation>%1 → порт %2 будь-куди</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="209"/>
+        <location filename="../prompt.cpp" line="216"/>
         <source>%1 - all incoming connections</source>
         <translation>%1 — усі вхідні з’єднання</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="210"/>
+        <location filename="../prompt.cpp" line="217"/>
         <source>%1 - any destination</source>
         <translation>%1 — будь-яка адреса</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="214"/>
+        <location filename="../prompt.cpp" line="221"/>
         <source>Any program → %1</source>
         <translation>Будь-яка програма → %1</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="229"/>
+        <location filename="../prompt.cpp" line="236"/>
         <source>Incoming connection</source>
         <translation>Вхідне з’єднання</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="229"/>
+        <location filename="../prompt.cpp" line="236"/>
         <source>Outgoing connection</source>
         <translation>Вихідне з’єднання</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="230"/>
+        <location filename="../prompt.cpp" line="237"/>
         <source>Someone on the network wants to connect to %1</source>
         <translation>Хтось із мережі хоче під’єднатися до %1</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="231"/>
+        <location filename="../prompt.cpp" line="238"/>
         <source>%1 wants to connect to the network</source>
         <translation>%1 хоче вийти в мережу</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="236"/>
+        <location filename="../prompt.cpp" line="243"/>
         <source>Program could not be identified (it may have exited already)</source>
         <translation>Програму не вдалося визначити (можливо, вона вже завершилась)</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="238"/>
+        <location filename="../prompt.cpp" line="245"/>
         <source>PID %1</source>
         <translation>PID %1</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="239"/>
+        <location filename="../prompt.cpp" line="246"/>
         <source>user %1</source>
         <translation>користувач %1</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="249"/>
+        <location filename="../prompt.cpp" line="256"/>
         <source>(no name seen in DNS)</source>
         <translation>(ім’я не помічене в DNS)</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="265"/>
+        <location filename="../prompt.cpp" line="272"/>
         <source>reverse DNS: %1</source>
         <translation>зворотний DNS: %1</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="276"/>
+        <location filename="../prompt.cpp" line="283"/>
         <source>%1 → local port %2</source>
         <translation>%1 → локальний порт %2</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="284"/>
+        <location filename="../prompt.cpp" line="291"/>
         <source>unknown (IP database has no entry)</source>
         <translation>невідомо (немає в базі IP)</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="287"/>
+        <location filename="../prompt.cpp" line="294"/>
         <source>unknown</source>
         <translation>невідомо</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="290"/>
+        <location filename="../prompt.cpp" line="297"/>
         <source>⚠  Known tracker / telemetry endpoint: %1</source>
         <translation>⚠  Відомий трекер / телеметрія: %1</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="294"/>
+        <location filename="../prompt.cpp" line="301"/>
         <source>The program is unknown, so a rule can only be made for the destination.</source>
         <translation>Програма невідома, тому правило можна створити лише для адреси.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../prompt.cpp" line="313"/>
+        <location filename="../prompt.cpp" line="320"/>
         <source>%n more waiting</source>
         <translation>
             <numerusform>ще %n чекає</numerusform>
@@ -660,17 +665,17 @@
         </translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="319"/>
+        <location filename="../prompt.cpp" line="326"/>
         <source>timed out</source>
         <translation>час вийшов</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="323"/>
+        <location filename="../prompt.cpp" line="330"/>
         <source>auto-deny in %1 s</source>
         <translation>заборона через %1 с</translation>
     </message>
     <message>
-        <location filename="../prompt.cpp" line="323"/>
+        <location filename="../prompt.cpp" line="330"/>
         <source>auto-allow in %1 s</source>
         <translation>дозвіл через %1 с</translation>
     </message>
@@ -678,7 +683,7 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../main.cpp" line="61"/>
+        <location filename="../main.cpp" line="63"/>
         <source>demo</source>
         <translation>демо</translation>
     </message>
@@ -1000,11 +1005,21 @@
     </message>
     <message>
         <location filename="../backend.cpp" line="76"/>
+        <source>Permission denied - only administrator accounts can control Varta.</source>
+        <translation>Доступ заборонено — керувати Varta можуть лише облікові записи адміністраторів.</translation>
+    </message>
+    <message>
+        <location filename="../backend.cpp" line="78"/>
+        <source>vartad is not running (sudo launchctl kickstart -k system/com.varta.vartad).</source>
+        <translation>vartad не запущено (sudo launchctl kickstart -k system/com.varta.vartad).</translation>
+    </message>
+    <message>
+        <location filename="../backend.cpp" line="81"/>
         <source>Permission denied - add yourself to the &apos;varta&apos; group and log in again.</source>
         <translation>Доступ заборонено — додайте себе до групи «varta» і увійдіть у систему знову.</translation>
     </message>
     <message>
-        <location filename="../backend.cpp" line="78"/>
+        <location filename="../backend.cpp" line="83"/>
         <source>vartad is not running (sudo systemctl start vartad).</source>
         <translation>vartad не запущено (sudo systemctl start vartad).</translation>
     </message>
@@ -1018,7 +1033,7 @@
     </message>
     <message>
         <location filename="../updater.cpp" line="76"/>
-        <location filename="../updater.cpp" line="88"/>
+        <location filename="../updater.cpp" line="92"/>
         <source>Check for updates</source>
         <translation>Перевірка оновлень</translation>
     </message>
@@ -1030,7 +1045,7 @@
 %1</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="89"/>
+        <location filename="../updater.cpp" line="93"/>
         <source>You have the latest version of Varta (%1).</source>
         <translation>У вас найновіша версія Varta (%1).</translation>
     </message>
@@ -1038,91 +1053,97 @@
 <context>
     <name>UpdateDialog</name>
     <message>
-        <location filename="../updater.cpp" line="103"/>
+        <location filename="../updater.cpp" line="107"/>
         <source>Varta update</source>
         <translation>Оновлення Varta</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="106"/>
+        <location filename="../updater.cpp" line="110"/>
         <source>&lt;span style=&apos;font-size:17px; font-weight:600&apos;&gt;Varta %1 is available&lt;/span&gt;</source>
-        <translation>&lt;span style='font-size:17px; font-weight:600'&gt;Доступна Varta %1&lt;/span&gt;</translation>
+        <translation>&lt;span style=&apos;font-size:17px; font-weight:600&apos;&gt;Доступна Varta %1&lt;/span&gt;</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="108"/>
+        <location filename="../updater.cpp" line="112"/>
         <source>You have version %1.</source>
         <translation>У вас версія %1.</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="113"/>
+        <location filename="../updater.cpp" line="117"/>
         <source>No release notes.</source>
         <translation>Опису змін немає.</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="121"/>
+        <location filename="../updater.cpp" line="125"/>
         <source>Skip this version</source>
         <translation>Пропустити цю версію</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="122"/>
+        <location filename="../updater.cpp" line="126"/>
         <source>Later</source>
         <translation>Пізніше</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="123"/>
+        <location filename="../updater.cpp" line="127"/>
         <source>Open release page</source>
         <translation>Відкрити сторінку релізу</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="124"/>
+        <location filename="../updater.cpp" line="128"/>
         <source>Download and install</source>
         <translation>Завантажити й встановити</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="129"/>
+        <location filename="../updater.cpp" line="133"/>
         <source>Download the new version from the release page and install it the same way as before.</source>
         <translation>Завантажте нову версію зі сторінки релізу й встановіть так само, як і раніше.</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="169"/>
+        <location filename="../updater.cpp" line="173"/>
         <source>Cannot write to %1</source>
         <translation>Не вдається записати в %1</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="178"/>
+        <location filename="../updater.cpp" line="182"/>
         <source>Downloading %1…</source>
         <translation>Завантаження %1…</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="209"/>
+        <location filename="../updater.cpp" line="213"/>
         <source>Download failed: %1</source>
         <translation>Не вдалося завантажити: %1</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="217"/>
+        <location filename="../updater.cpp" line="221"/>
         <source>The downloaded file is damaged (checksum mismatch). Please try again.</source>
         <translation>Завантажений файл пошкоджено (контрольна сума не збігається). Спробуйте ще раз.</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="221"/>
+        <location filename="../updater.cpp" line="225"/>
         <source>Cannot save %1</source>
         <translation>Не вдається зберегти %1</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="231"/>
+        <location filename="../updater.cpp" line="235"/>
         <source>Downloaded to %1.
 The installer asks for administrator rights, closes this window, replaces the program files and restarts the service. Your rules and settings are kept.</source>
         <translation>Завантажено в %1.
 Інсталятор попросить права адміністратора, закриє це вікно, замінить файли програми й перезапустить службу. Ваші правила й налаштування збережуться.</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="234"/>
+        <location filename="../updater.cpp" line="238"/>
         <source>Install now</source>
         <translation>Встановити зараз</translation>
     </message>
     <message>
-        <location filename="../updater.cpp" line="261"/>
+        <location filename="../updater.cpp" line="265"/>
         <source>Could not start the installer. Unpack %1 and run install.cmd.</source>
         <translation>Не вдалося запустити інсталятор. Розпакуйте %1 і запустіть install.cmd.</translation>
+    </message>
+    <message>
+        <location filename="../updater.cpp" line="282"/>
+        <location filename="../updater.cpp" line="296"/>
+        <source>Could not start the installer. Unpack %1 and run install.sh.</source>
+        <translation>Не вдалося запустити інсталятор. Розпакуйте %1 і запустіть install.sh.</translation>
     </message>
 </context>
 </TS>

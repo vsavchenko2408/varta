@@ -26,6 +26,9 @@ static int self_pid() { return static_cast<int>(getpid()); }
 #include "packet.hpp"
 #ifdef _WIN32
 #include "procinfo_win.hpp"
+#elif defined(__APPLE__)
+#include "mac_daemon.hpp"
+#include "procinfo_mac.hpp"
 #else
 #include "linux_daemon.hpp"
 #include "procinfo.hpp"
@@ -443,7 +446,11 @@ static void test_settings_and_nft() {
     CHECK(s.set("ask_inbound", "off", err) && !s.ask_inbound);
     CHECK(!s.set("nope", "1", err));
 
-#ifndef _WIN32
+#ifdef __APPLE__
+    const std::string pf = MacDaemon::pf_rules();
+    CHECK(pf.find("table <varta_deny> persist") != std::string::npos);
+    CHECK(pf.find("block return out quick from any to <varta_deny>") != std::string::npos);
+#elif !defined(_WIN32)
     const std::string nft = LinuxDaemon::nft_script(s);
     CHECK(nft.find("table inet varta_ask {") != std::string::npos);
     CHECK(nft.find("queue num 0 bypass") != std::string::npos);
