@@ -364,7 +364,7 @@ static void test_engine() {
     old.time_ms = now_ms() - 10000;  // already past the 5 s deadline
     e.on_connection(old, 8);
     e.tick();
-    CHECK(host.verdicts.size() == 7 && !host.verdicts[6].second);  // timeout_action = deny
+    CHECK(host.verdicts.size() == 7 && host.verdicts[6].second == (e.settings.timeout_action == "allow"));
 
     set["key"] = "auto_allow_dns";
     set["value"] = "off";
