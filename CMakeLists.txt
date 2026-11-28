@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(varta VERSION 0.6.0 LANGUAGES CXX)
+project(varta VERSION 0.6.1 LANGUAGES CXX)
 # The one place for the version number. Release tags are v<version> (e.g. v0.4.0):
 # the GUI compares this number with the latest GitHub release to offer updates.
 

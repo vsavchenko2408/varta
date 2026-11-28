@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     std::string lookup_ip;
     bool do_update = false, print_nft = false;
     bool install_svc = false, uninstall_svc = false, console = false, service = false, verbose = false,
-         restore_fw = false;
+         restore_fw = false, fw_selftest = false;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
         auto value = [&](std::string& dst) {
@@ -134,6 +134,7 @@ int main(int argc, char** argv) {
         else if (a == "--install-service") install_svc = true;
         else if (a == "--uninstall-service") uninstall_svc = true;
         else if (a == "--restore-firewall") restore_fw = true;
+        else if (a == "--firewall-selftest") fw_selftest = true;
         else if (a == "--console") console = true;
         else if (a == "--service") service = true;
         else if (a == "--foreground") {}
@@ -148,12 +149,13 @@ int main(int argc, char** argv) {
     if (install_svc) return WindowsDaemon::install_service();
     if (uninstall_svc) return WindowsDaemon::uninstall_service();
     if (restore_fw) return WindowsDaemon::restore_windows_firewall(paths);
+    if (fw_selftest) return WindowsDaemon::firewall_selftest(paths);
     if (service) return WindowsDaemon::run_as_service(paths);
     (void)console;  // console is the default when started by hand
     WindowsDaemon d(paths);
     return d.run_console();
 #elif defined(__APPLE__)
-    (void)install_svc; (void)uninstall_svc; (void)console; (void)service; (void)restore_fw;
+    (void)install_svc; (void)uninstall_svc; (void)console; (void)service; (void)restore_fw; (void)fw_selftest;
     if (print_nft) {
         Settings s;
         s.load(paths.settings());
@@ -163,7 +165,7 @@ int main(int argc, char** argv) {
     MacDaemon d(paths, verbose);
     return d.run();
 #else
-    (void)install_svc; (void)uninstall_svc; (void)console; (void)service; (void)restore_fw; (void)verbose;
+    (void)install_svc; (void)uninstall_svc; (void)console; (void)service; (void)restore_fw; (void)fw_selftest; (void)verbose;
     if (print_nft) {
         Settings s;
         s.load(paths.settings());

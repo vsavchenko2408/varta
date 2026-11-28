@@ -301,11 +301,21 @@ void WindowsDaemon::inject_rst(const Held& h) {
 }
 
 void WindowsDaemon::verdict(const std::vector<uint64_t>& tickets, bool allow, const Connection& c) {
-    // An allowed incoming connection also needs a Windows Firewall allow rule while vartad
-    // blocks inbound there; the client's retransmission arrives once the rule is in place.
-    if (allow && c.inbound && !c.proc.exe.empty() && engine_.settings.block_inbound &&
-        inbound_once_.insert(c.proc.exe).second)
-        update_firewall_wanted(true);
+    // An incoming connection YOU allowed also needs a Windows Firewall rule while vartad blocks
+    // inbound there (the client's retransmission arrives once it is in place). Only your own
+    // answers count - never Varta's built-in defaults or "no GUI: allow".
+    if (allow && c.inbound && !c.proc.exe.empty() && engine_.settings.block_inbound) {
+        if (c.reason == "user (once)") {
+            winfw::InboundAllow a;
+            a.program = c.proc.exe;
+            a.protocol = c.proto == kProtoTcp ? "TCP" : "UDP";
+            a.local_port = c.local_port;
+            a.remote = c.remote.unmapped().str();
+            if (inbound_once_.insert(a).second) update_firewall_wanted(true);
+        } else if (c.reason == "user (new rule)") {
+            update_firewall_wanted(true);  // the new rule is picked up from the rule list
+        }
+    }
     for (uint64_t t : tickets) {
         auto it = held_.find(t);
         if (it == held_.end()) continue;
@@ -358,20 +368,29 @@ void WindowsDaemon::update_firewall_wanted(bool force) {
     if (!force && now - fw_checked_ms_ < 2000) return;
     fw_checked_ms_ = now;
     const bool enable = engine_.settings.block_inbound;
-    std::set<std::string> programs;
+    std::set<winfw::InboundAllow> rules;
     if (enable) {
-        for (const AppRule& r : engine_.rules.all())
-            if (r.enabled && r.action == Action::Allow && r.direction == "in" && !r.exe.empty()) programs.insert(r.exe);
-        programs.insert(inbound_once_.begin(), inbound_once_.end());
+        // Your rules for incoming connections ("in" only: Varta's built-in defaults have no
+        // direction and are never copied into Windows Firewall).
+        for (const AppRule& r : engine_.rules.all()) {
+            if (!r.enabled || r.action != Action::Allow || r.direction != "in" || r.exe.empty()) continue;
+            winfw::InboundAllow a;
+            a.program = r.exe;
+            if (r.proto == "tcp") a.protocol = "TCP";
+            else if (r.proto == "udp") a.protocol = "UDP";
+            a.remote = r.ip;
+            rules.insert(a);
+        }
+        rules.insert(inbound_once_.begin(), inbound_once_.end());
     }
     std::string sig = enable ? "on" : "off";
-    for (const auto& p : programs) sig += "|" + p;
+    for (const auto& r : rules) sig += "|" + r.name();
     if (sig == fw_sig_) return;
     fw_sig_ = sig;
     {
         std::lock_guard<std::mutex> lock(fw_mu_);
         fw_enable_ = enable;
-        fw_programs_ = std::move(programs);
+        fw_rules_ = std::move(rules);
         fw_dirty_ = true;
     }
     fw_cv_.notify_one();
@@ -381,14 +400,14 @@ void WindowsDaemon::firewall_loop() {
     int applied = -1;  // -1 unknown, 0 restored, 1 enabled
     for (;;) {
         bool enable;
-        std::set<std::string> programs;
+        std::set<winfw::InboundAllow> rules;
         {
             std::unique_lock<std::mutex> lock(fw_mu_);
             fw_cv_.wait(lock, [&] { return fw_dirty_ || !running_; });
             if (!running_) return;
             fw_dirty_ = false;
             enable = fw_enable_;
-            programs = fw_programs_;
+            rules = fw_rules_;
         }
         if (enable) {
             if (applied != 1) {
@@ -397,9 +416,9 @@ void WindowsDaemon::firewall_loop() {
                             : "Windows Firewall: could not apply block_inbound (exit " + std::to_string(rc) + ")");
                 if (rc == 0) applied = 1;
             }
-            const int rc = run_powershell(winfw::sync_script(programs), paths_.data_dir);
-            if (rc != 0) log("Windows Firewall: updating allowed programs failed (exit " + std::to_string(rc) + ")");
-            else log("Windows Firewall: " + std::to_string(programs.size()) + " program(s) allowed inbound");
+            const int rc = run_powershell(winfw::sync_script(rules), paths_.data_dir);
+            if (rc != 0) log("Windows Firewall: updating allow rules failed (exit " + std::to_string(rc) + ")");
+            else log("Windows Firewall: " + std::to_string(rules.size()) + " inbound allow rule(s) from your decisions");
         } else if (applied != 0) {
             const int rc = run_powershell(winfw::restore_script(firewall_backup(paths_)), paths_.data_dir);
             log(rc == 0 ? "Windows Firewall: previous settings restored (block_inbound off)"
@@ -413,6 +432,39 @@ int WindowsDaemon::restore_windows_firewall(const Paths& p) {
     const int rc = run_powershell(winfw::restore_script(firewall_backup(p)), p.data_dir);
     std::cout << (rc == 0 ? "Windows Firewall settings restored.\n" : "Could not restore Windows Firewall settings.\n");
     return rc == 0 ? 0 : 1;
+}
+
+int WindowsDaemon::firewall_selftest(const Paths& p) {
+    std::error_code ec;
+    std::filesystem::create_directories(p.data_dir, ec);
+    const std::string backup = firewall_backup(p);
+    auto step = [&](const char* what, const std::string& script) {
+        const int rc = run_powershell(script, p.data_dir);
+        std::cout << (rc == 0 ? "ok    " : "FAIL  ") << what << " (exit " << rc << ")\n";
+        return rc == 0;
+    };
+    auto count_is = [&](int n) {
+        return "$c = @(Get-NetFirewallRule -Group " + winfw::ps_quote(winfw::kGroup) +
+               " -ErrorAction SilentlyContinue).Count; Write-Output \"rules: $c\"; if ($c -ne " + std::to_string(n) +
+               ") { exit 1 }\n";
+    };
+    winfw::InboundAllow once;
+    once.program = "C:\\Windows\\System32\\ping.exe";
+    once.protocol = "UDP";
+    once.local_port = 40000;
+    once.remote = "203.0.113.5";
+    winfw::InboundAllow whole;
+    whole.program = "C:\\Program Files\\It's a test\\app.exe";
+    bool ok = step("enable", winfw::enable_script(backup)) &&
+              step("profiles blocked", "if (@(Get-NetFirewallProfile | Where-Object { -not $_.Enabled -or "
+                                       "$_.DefaultInboundAction -ne 'Block' }).Count -ne 0) { exit 1 }\n") &&
+              step("sync 2 rules", winfw::sync_script({once, whole})) && step("2 rules present", count_is(2)) &&
+              step("sync again (no duplicates)", winfw::sync_script({once, whole})) && step("still 2", count_is(2)) &&
+              step("sync 1 rule", winfw::sync_script({whole})) && step("1 rule present", count_is(1)) &&
+              step("restore", winfw::restore_script(backup)) && step("rules removed", count_is(0)) &&
+              step("backup removed", "if (Test-Path -LiteralPath " + winfw::ps_quote(backup) + ") { exit 1 }\n");
+    std::cout << (ok ? "firewall self-test passed\n" : "firewall self-test FAILED\n");
+    return ok ? 0 : 1;
 }
 
 // ------------------------------------------------------------------------ threads

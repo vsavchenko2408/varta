@@ -399,9 +399,26 @@ static void test_winfw_scripts() {
     CHECK(en.find("-NotifyOnListen False") != std::string::npos);
     CHECK(en.find("-DefaultOutboundAction Allow") != std::string::npos);
     CHECK(en.find("if (-not (Test-Path") != std::string::npos);  // backup only once
-    const std::string sy = winfw::sync_script({"C:\\Games\\a.exe", "C:\\x\\b'c.exe"});
-    CHECK(sy.find("$want = @('C:\\Games\\a.exe', 'C:\\x\\b''c.exe')") != std::string::npos);
-    CHECK(winfw::sync_script({}).find("$want = @()") != std::string::npos);
+    winfw::InboundAllow once;
+    once.program = "C:\\Games\\b'c.exe";
+    once.protocol = "TCP";
+    once.local_port = 27015;
+    once.remote = "203.0.113.5";
+    winfw::InboundAllow whole;
+    whole.program = "C:\\Games\\a.exe";
+    CHECK(once.display_name() == "Varta: b'c.exe (TCP 27015 from 203.0.113.5)");
+    CHECK(whole.display_name() == "Varta: a.exe");
+    CHECK(once.name().rfind("Varta-", 0) == 0 && once.name().size() == 22);
+    winfw::InboundAllow upper = once;
+    upper.program = "C:\\GAMES\\B'C.EXE";
+    CHECK(upper.name() == once.name());  // Windows paths: case does not matter
+    CHECK(whole.name() != once.name());
+    const std::string sy = winfw::sync_script({once, whole});
+    CHECK(sy.find("Program = 'C:\\Games\\b''c.exe'; Protocol = 'TCP'; LocalPort = '27015'; RemoteAddress = '203.0.113.5'") !=
+          std::string::npos);
+    CHECK(sy.find("DisplayName = 'Varta: a.exe'; Program = 'C:\\Games\\a.exe' }") != std::string::npos);
+    CHECK(sy.find("New-NetFirewallRule @w -Group $g -Direction Inbound -Action Allow") != std::string::npos);
+    CHECK(winfw::sync_script({}).find("$want = @(\n)") != std::string::npos);  // removes everything
     const std::string re = winfw::restore_script("b.csv");
     CHECK(re.find("Remove-NetFirewallRule") != std::string::npos);
     CHECK(re.find("Import-Csv") != std::string::npos);

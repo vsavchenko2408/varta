@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "engine.hpp"
+#include "winfw.hpp"
 #include "procinfo_win.hpp"
 
 namespace vartad {
@@ -43,6 +44,8 @@ public:
     static int uninstall_service();
     // Puts Windows Defender Firewall back the way it was before vartad managed it (uninstall).
     static int restore_windows_firewall(const Paths& p);
+    // CI check on a throw-away machine: enable, add/remove rules, restore (changes the firewall!).
+    static int firewall_selftest(const Paths& p);
     // Runs a PowerShell script hidden and waits; returns its exit code (-1 if it did not start).
     static int run_powershell(const std::string& script, const std::string& work_dir);
     // Builds the capture filter (exposed for tests).
@@ -108,7 +111,7 @@ private:
     std::unordered_map<uint64_t, Held> held_;
     std::unordered_map<std::string, Flow> flows_;
     uint64_t next_ticket_ = 1;
-    std::set<std::string> inbound_once_;  // programs allowed inbound "once"/this session
+    std::set<winfw::InboundAllow> inbound_once_;  // incoming connections you allowed "once"
     std::string fw_sig_;
     int64_t fw_checked_ms_ = 0;
 
@@ -117,7 +120,7 @@ private:
     std::condition_variable fw_cv_;
     bool fw_dirty_ = false;
     bool fw_enable_ = false;
-    std::set<std::string> fw_programs_;
+    std::set<winfw::InboundAllow> fw_rules_;
 
     std::mutex clients_mu_;
     std::map<uint64_t, std::shared_ptr<Client>> clients_;

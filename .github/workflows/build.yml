@@ -80,6 +80,12 @@ jobs:
       - name: Test
         run: ctest --test-dir build -C Release --output-on-failure
 
+      - name: Windows Firewall self-test (block_inbound scripts on a real Windows)
+        shell: pwsh
+        run: |
+          build/Release/vartad.exe --firewall-selftest --data-dir "$env:RUNNER_TEMP\varta"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
       - name: Package
         shell: pwsh
         run: |
