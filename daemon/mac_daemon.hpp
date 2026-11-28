@@ -7,7 +7,9 @@
 //   * libproc finds the program that owns the socket;
 //   * the engine applies rules / asks the GUI exactly as on Linux and Windows;
 //   * "deny" puts the remote address into a pf table (anchor com.apple/varta_ask), which
-//     rejects further traffic to it and kills the connection that is already open.
+//     rejects further traffic to it and kills the connection that is already open;
+//   * block_inbound: pf keeps state for outgoing UDP and drops UDP from the internet that is
+//     not a reply (local network, DHCP and mDNS still pass).
 // Limits (shown in the GUI and README): the first packets of a connection get out before the
 // decision, and a blocked address is blocked for every program, not only the one that asked.
 // A Network Extension backend can implement EngineHost later without touching the engine.
@@ -31,7 +33,7 @@ public:
     ~MacDaemon() override;
     int run();  // blocks until SIGINT/SIGTERM
 
-    static std::string pf_rules();
+    static std::string pf_rules(const Settings& s);
     // BPF program: new TCP connections (SYN without ACK, IPv4 and IPv6) and all UDP.
     static const char* capture_filter() {
         return "(tcp[tcpflags] & (tcp-syn|tcp-ack)) == tcp-syn or "
@@ -41,7 +43,7 @@ public:
     // EngineHost
     void verdict(const std::vector<uint64_t>& tickets, bool allow, const Connection& c) override;
     void send(uint64_t client, const std::string& line) override;
-    void reinstall_capture() override {}
+    void reinstall_capture() override;  // reloads the pf rules (block_inbound)
 
 private:
     struct Client {

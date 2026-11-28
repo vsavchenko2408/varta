@@ -47,6 +47,13 @@ struct Settings {
 #endif
     std::string no_gui_action = "allow"; // when no GUI is connected (boot, no login yet)
     bool ask_inbound = true;             // also ask for new incoming connections
+    // Block unsolicited incoming traffic from the internet (replies to your own traffic pass).
+    // Linux: covered by ask_inbound (new inbound UDP/TCP is queued and asked about).
+    // macOS: pf blocks unsolicited inbound UDP from outside the local network.
+    // Windows: vartad turns on Windows Defender Firewall for inbound only (inbound blocked by
+    // default, its "allow this app?" pop-ups off) and adds an allow rule there for every
+    // program you allow incoming connections for in Varta.
+    bool block_inbound = true;
     bool auto_allow_dns = true;          // let DNS (port 53) through without asking
     int queue = 0;                       // Linux NFQUEUE number
     int history = 3000;                  // connections kept for the GUI log
@@ -110,7 +117,8 @@ public:
     virtual void verdict(const std::vector<uint64_t>& tickets, bool allow, const Connection& c) = 0;
     // Queue one protocol line (already terminated with '\n') for a GUI client.
     virtual void send(uint64_t client, const std::string& line) = 0;
-    // Settings that change what is captured (ask_inbound, auto_allow_dns) were modified.
+    // Settings that change what is captured or blocked (ask_inbound, auto_allow_dns,
+    // block_inbound) were modified.
     virtual void reinstall_capture() = 0;
 };
 

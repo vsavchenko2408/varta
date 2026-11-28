@@ -104,6 +104,7 @@ private:
     QComboBox* timeoutAction_;
     QComboBox* noGuiAction_;
     QCheckBox* askInbound_;
+    QCheckBox* blockInbound_;
     QCheckBox* autoDns_;
     QComboBox* theme_;
     QCheckBox* notifyBlocked_;

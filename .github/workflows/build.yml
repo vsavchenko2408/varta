@@ -146,6 +146,9 @@ jobs:
           sudo ./build/vartad --verbose --config-dir /tmp/vcfg --data-dir /tmp/vdata --run-dir /tmp/vrun \
                > /tmp/vartad.log 2>&1 &
           sleep 6
+          # block_inbound (default on): unsolicited UDP is dropped, replies still arrive
+          sudo pfctl -a com.apple/varta_ask -s rules | grep "block drop in quick proto udp all"
+          dig +time=3 +tries=2 @9.9.9.9 example.com A | grep -q "status: NOERROR"
           /usr/bin/curl -s -m 10 -o /dev/null http://1.1.1.1/ || true   # seen by vartad and denied
           sleep 3
           blocked=0

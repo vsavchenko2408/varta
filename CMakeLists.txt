@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(varta VERSION 0.5.0 LANGUAGES CXX)
+project(varta VERSION 0.6.0 LANGUAGES CXX)
 # The one place for the version number. Release tags are v<version> (e.g. v0.4.0):
 # the GUI compares this number with the latest GitHub release to offer updates.
 
@@ -64,6 +64,7 @@ install(TARGETS varta RUNTIME DESTINATION bin)
 #   Windows: WinDivert 2.2 (pass -DVARTA_WINDIVERT_DIR=path/to/WinDivert-2.2.2-A)
 set(VARTAD_COMMON
   daemon/json.cpp
+  daemon/winfw.cpp
   daemon/packet.cpp
   daemon/ipdb.cpp
   daemon/apprules.cpp

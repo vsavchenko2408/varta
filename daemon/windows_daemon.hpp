@@ -15,6 +15,7 @@
 #include <deque>
 #include <functional>
 #include <map>
+#include <set>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -40,6 +41,10 @@ public:
     static int run_as_service(const Paths& p);
     static int install_service();
     static int uninstall_service();
+    // Puts Windows Defender Firewall back the way it was before vartad managed it (uninstall).
+    static int restore_windows_firewall(const Paths& p);
+    // Runs a PowerShell script hidden and waits; returns its exit code (-1 if it did not start).
+    static int run_powershell(const std::string& script, const std::string& work_dir);
     // Builds the capture filter (exposed for tests).
     static std::string capture_filter(const Settings& s);
 
@@ -80,6 +85,10 @@ private:
     void writer_loop(const std::shared_ptr<Client>& c);
     void handle_packet(void* handle, const uint8_t* data, unsigned len, const void* addr);
     void inject_rst(const Held& h);
+    // Windows Defender Firewall management (block_inbound). PowerShell is slow (about a
+    // second), so a worker thread applies the latest wanted state in the background.
+    void firewall_loop();
+    void update_firewall_wanted(bool force);  // engine_mu_ held
     static std::string flow_key(uint8_t proto, uint16_t local_port, const IpAddr& remote, uint16_t remote_port);
 
     Paths paths_;
@@ -99,6 +108,16 @@ private:
     std::unordered_map<uint64_t, Held> held_;
     std::unordered_map<std::string, Flow> flows_;
     uint64_t next_ticket_ = 1;
+    std::set<std::string> inbound_once_;  // programs allowed inbound "once"/this session
+    std::string fw_sig_;
+    int64_t fw_checked_ms_ = 0;
+
+    // handed to firewall_loop
+    std::mutex fw_mu_;
+    std::condition_variable fw_cv_;
+    bool fw_dirty_ = false;
+    bool fw_enable_ = false;
+    std::set<std::string> fw_programs_;
 
     std::mutex clients_mu_;
     std::map<uint64_t, std::shared_ptr<Client>> clients_;

@@ -405,11 +405,18 @@ QWidget* MainWindow::buildSettingsTab() {
     noGuiAction_->addItem(tr("Deny (strict)"), "deny");
     askInbound_ = new QCheckBox(tr("Also ask about new incoming connections"));
     autoDns_ = new QCheckBox(tr("Let DNS queries (port 53) through without asking"));
+    blockInbound_ = new QCheckBox(tr("Block unsolicited incoming traffic from the internet"));
+    blockInbound_->setToolTip(tr("Replies to your own connections and the local network still pass.\n"
+                                 "Windows: Varta turns on Windows Defender Firewall for incoming traffic only, "
+                                 "without its pop-ups, and allows there the programs you allow in Varta.\n"
+                                 "macOS: UDP from the internet is dropped unless it is a reply."));
+    blockInbound_->setVisible(false);  // shown for Windows and macOS once the daemon says hello
     f->addRow(tr("Prompt timeout"), timeout_);
     f->addRow(tr("When there is no answer"), timeoutAction_);
     f->addRow(tr("When no GUI is running"), noGuiAction_);
     f->addRow(QString(), askInbound_);
     f->addRow(QString(), autoDns_);
+    f->addRow(QString(), blockInbound_);
     l->addWidget(daemonBox);
 
     auto send = [this](const QString& key, const QString& value) {
@@ -420,6 +427,7 @@ QWidget* MainWindow::buildSettingsTab() {
     connect(noGuiAction_, &QComboBox::currentIndexChanged, this, [=] { send("no_gui_action", noGuiAction_->currentData().toString()); });
     connect(askInbound_, &QCheckBox::toggled, this, [=](bool on) { send("ask_inbound", on ? "on" : "off"); });
     connect(autoDns_, &QCheckBox::toggled, this, [=](bool on) { send("auto_allow_dns", on ? "on" : "off"); });
+    connect(blockInbound_, &QCheckBox::toggled, this, [=](bool on) { send("block_inbound", on ? "on" : "off"); });
 
     auto* guiBox = new QGroupBox(tr("This window"));
     auto* g = new QFormLayout(guiBox);
@@ -557,6 +565,8 @@ void MainWindow::onHello(const QJsonObject& m) {
     denied_ = m.value("denied").toInteger();
     attribution_ = m.value("ipdb_attribution").toString();
     prompt_->setPlatform(m.value("platform").toString());
+    // Linux: unsolicited inbound is already covered by "ask about incoming connections".
+    blockInbound_->setVisible(m.value("platform").toString() != "linux" && m.contains("platform"));
     const qint64 ranges = m.value("ipdb_ranges").toInteger();
 #if defined(Q_OS_WIN)
     const QString updateCmd = "vartad --update-db";
@@ -667,6 +677,7 @@ void MainWindow::onSettings(const QJsonObject& s) {
     timeoutAction_->setCurrentIndex(qMax(0, timeoutAction_->findData(s.value("timeout_action").toString())));
     noGuiAction_->setCurrentIndex(qMax(0, noGuiAction_->findData(s.value("no_gui_action").toString())));
     askInbound_->setChecked(s.value("ask_inbound").toBool());
+    blockInbound_->setChecked(s.value("block_inbound").toBool());
     autoDns_->setChecked(s.value("auto_allow_dns").toBool());
     applyingSettings_ = false;
     updateStatus();

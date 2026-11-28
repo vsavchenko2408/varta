@@ -21,6 +21,7 @@ static int self_pid() { return static_cast<int>(getpid()); }
 
 #include "apprules.hpp"
 #include "engine.hpp"
+#include "winfw.hpp"
 #include "ipdb.hpp"
 #include "json.hpp"
 #include "packet.hpp"
@@ -391,6 +392,25 @@ static void test_engine() {
     std::filesystem::remove_all(dir);
 }
 
+static void test_winfw_scripts() {
+    CHECK(winfw::ps_quote("C:\\it's") == "'C:\\it''s'");
+    const std::string en = winfw::enable_script("C:\\ProgramData\\Varta\\b.csv");
+    CHECK(en.find("-DefaultInboundAction Block") != std::string::npos);
+    CHECK(en.find("-NotifyOnListen False") != std::string::npos);
+    CHECK(en.find("-DefaultOutboundAction Allow") != std::string::npos);
+    CHECK(en.find("if (-not (Test-Path") != std::string::npos);  // backup only once
+    const std::string sy = winfw::sync_script({"C:\\Games\\a.exe", "C:\\x\\b'c.exe"});
+    CHECK(sy.find("$want = @('C:\\Games\\a.exe', 'C:\\x\\b''c.exe')") != std::string::npos);
+    CHECK(winfw::sync_script({}).find("$want = @()") != std::string::npos);
+    const std::string re = winfw::restore_script("b.csv");
+    CHECK(re.find("Remove-NetFirewallRule") != std::string::npos);
+    CHECK(re.find("Import-Csv") != std::string::npos);
+    Settings s;
+    std::string err;
+    CHECK(s.block_inbound);
+    CHECK(s.set("block_inbound", "off", err) && !s.block_inbound);
+}
+
 // Varta's own GUI may reach GitHub (update check) without a prompt; nothing else may.
 static void test_self_update() {
     Paths paths;
@@ -447,9 +467,13 @@ static void test_settings_and_nft() {
     CHECK(!s.set("nope", "1", err));
 
 #ifdef __APPLE__
-    const std::string pf = MacDaemon::pf_rules();
+    Settings ps;
+    const std::string pf = MacDaemon::pf_rules(ps);
     CHECK(pf.find("table <varta_deny> persist") != std::string::npos);
     CHECK(pf.find("block return out quick from any to <varta_deny>") != std::string::npos);
+    CHECK(pf.find("block drop in quick proto udp from any to any") != std::string::npos);  // on by default
+    ps.block_inbound = false;
+    CHECK(MacDaemon::pf_rules(ps).find("proto udp") == std::string::npos);
 #elif !defined(_WIN32)
     const std::string nft = LinuxDaemon::nft_script(s);
     CHECK(nft.find("table inet varta_ask {") != std::string::npos);
@@ -474,6 +498,7 @@ int main() {
     test_settings_and_nft();
     test_engine();
     test_self_update();
+    test_winfw_scripts();
 #ifdef _WIN32
     test_windows_filter();
 #endif

@@ -85,13 +85,23 @@ void MacDaemon::log_verbose(const std::string& s) const {
 
 // ---------------------------------------------------------------------------------- pf
 
-std::string MacDaemon::pf_rules() {
+std::string MacDaemon::pf_rules(const Settings& s) {
     std::ostringstream o;
     o << "# vartad (Varta interactive firewall): addresses you denied\n"
       << "table <" << kTable << "> persist\n"
       // "return": the program gets an immediate connection reset instead of a timeout.
       << "block return out quick from any to <" << kTable << ">\n"
       << "block drop in quick from <" << kTable << "> to any\n";
+    if (s.block_inbound) {
+        o << "# block_inbound: UDP from the internet only as a reply to your own traffic\n"
+          << "table <varta_lan> const { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, "
+             "100.64.0.0/10, fc00::/7, fe80::/10 }\n"
+          // Not "quick": this only adds state tracking for outgoing UDP, later rules still decide.
+          << "pass out proto udp from any to any keep state\n"
+          << "pass in quick proto udp from any port { 67, 547 } to any port { 68, 546 }\n"
+          << "pass in quick proto udp from <varta_lan> to any\n"
+          << "block drop in quick proto udp from any to any\n";
+    }
     return o.str();
 }
 
@@ -99,7 +109,7 @@ bool MacDaemon::install_pf() {
     const std::string file = (fs::path(paths_.run_dir) / "pf-varta-ask.conf").string();
     {
         std::ofstream out(file, std::ios::trunc);
-        out << pf_rules();
+        out << pf_rules(engine_.settings);
     }
     // The stock /etc/pf.conf evaluates every "com.apple/*" sub-anchor. Make sure that main
     // ruleset is loaded (pf may never have been enabled on this Mac).
@@ -119,6 +129,19 @@ bool MacDaemon::install_pf() {
     table_.clear();
     sync_block_table(true);
     return true;
+}
+
+void MacDaemon::reinstall_capture() {
+    if (!pf_loaded_) return;
+    const std::string file = (fs::path(paths_.run_dir) / "pf-varta-ask.conf").string();
+    {
+        std::ofstream out(file, std::ios::trunc);
+        out << pf_rules(engine_.settings);
+    }
+    if (sh("pfctl -a " + std::string(kAnchor) + " -f " + shell_quote(file)) != 0) log("pfctl rejected " + file);
+    else log(std::string("pf rules reloaded (block_inbound ") + (engine_.settings.block_inbound ? "on)" : "off)"));
+    table_.clear();
+    sync_block_table(true);
 }
 
 void MacDaemon::remove_pf() {

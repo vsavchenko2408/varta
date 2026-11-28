@@ -26,6 +26,7 @@ static void usage() {
 #ifdef _WIN32
                  "  --install-service   install and start the Windows service (as Administrator)\n"
                  "  --uninstall-service stop and remove the Windows service\n"
+                 "  --restore-firewall  put Windows Firewall back as it was before vartad (uninstall)\n"
                  "  --console           run in this console instead of as a service (Ctrl+C stops)\n"
                  "  --service           (used by the Service Control Manager)\n"
 #elif defined(__APPLE__)
@@ -110,7 +111,8 @@ int main(int argc, char** argv) {
     Paths paths;
     std::string lookup_ip;
     bool do_update = false, print_nft = false;
-    bool install_svc = false, uninstall_svc = false, console = false, service = false, verbose = false;
+    bool install_svc = false, uninstall_svc = false, console = false, service = false, verbose = false,
+         restore_fw = false;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
         auto value = [&](std::string& dst) {
@@ -131,6 +133,7 @@ int main(int argc, char** argv) {
         else if (a == "--run-dir") value(paths.run_dir);
         else if (a == "--install-service") install_svc = true;
         else if (a == "--uninstall-service") uninstall_svc = true;
+        else if (a == "--restore-firewall") restore_fw = true;
         else if (a == "--console") console = true;
         else if (a == "--service") service = true;
         else if (a == "--foreground") {}
@@ -144,20 +147,23 @@ int main(int argc, char** argv) {
     (void)print_nft; (void)verbose;
     if (install_svc) return WindowsDaemon::install_service();
     if (uninstall_svc) return WindowsDaemon::uninstall_service();
+    if (restore_fw) return WindowsDaemon::restore_windows_firewall(paths);
     if (service) return WindowsDaemon::run_as_service(paths);
     (void)console;  // console is the default when started by hand
     WindowsDaemon d(paths);
     return d.run_console();
 #elif defined(__APPLE__)
-    (void)install_svc; (void)uninstall_svc; (void)console; (void)service;
+    (void)install_svc; (void)uninstall_svc; (void)console; (void)service; (void)restore_fw;
     if (print_nft) {
-        std::cout << MacDaemon::pf_rules();
+        Settings s;
+        s.load(paths.settings());
+        std::cout << MacDaemon::pf_rules(s);
         return 0;
     }
     MacDaemon d(paths, verbose);
     return d.run();
 #else
-    (void)install_svc; (void)uninstall_svc; (void)console; (void)service; (void)verbose;
+    (void)install_svc; (void)uninstall_svc; (void)console; (void)service; (void)restore_fw; (void)verbose;
     if (print_nft) {
         Settings s;
         s.load(paths.settings());

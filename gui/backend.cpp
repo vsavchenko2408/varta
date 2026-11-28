@@ -197,7 +197,7 @@ QJsonObject makeConn(qint64 id, const DemoApp& a, const DemoDest& d, int pid) {
 
 DemoBackend::DemoBackend(QObject* parent) : Backend(parent) {
     settings_ = {{"mode", "ask"},           {"prompt_timeout", 30},     {"timeout_action", "deny"},
-                 {"no_gui_action", "allow"}, {"ask_inbound", true},      {"auto_allow_dns", true},
+                 {"no_gui_action", "allow"}, {"ask_inbound", true}, {"block_inbound", true},      {"auto_allow_dns", true},
                  {"queue", 0},               {"history", 3000}};
     auto rule = [&](qint64 id, const char* action, const char* exe, const char* host, const char* note,
                     int hits) {
@@ -304,7 +304,7 @@ void DemoBackend::send(const QJsonObject& msg) {
     } else if (t == "set_setting") {
         const QString key = msg.value("key").toString(), value = msg.value("value").toString();
         if (key == "prompt_timeout" || key == "history") settings_[key] = value.toInt();
-        else if (key == "ask_inbound" || key == "auto_allow_dns") settings_[key] = value == "on";
+        else if (key == "ask_inbound" || key == "auto_allow_dns" || key == "block_inbound") settings_[key] = value == "on";
         else settings_[key] = value;
         emit settings(settings_);
     } else if (t == "rule_delete") {

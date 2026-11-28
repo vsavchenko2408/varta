@@ -299,186 +299,200 @@
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="408"/>
+        <source>Block unsolicited incoming traffic from the internet</source>
+        <translation>Блокувати непрохані вхідні пакети з інтернету</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="409"/>
+        <source>Replies to your own connections and the local network still pass.
+Windows: Varta turns on Windows Defender Firewall for incoming traffic only, without its pop-ups, and allows there the programs you allow in Varta.
+macOS: UDP from the internet is dropped unless it is a reply.</source>
+        <translation>Відповіді на ваші власні з’єднання й локальна мережа проходять.
+Windows: Varta вмикає брандмауер Windows лише для вхідного трафіку, без його спливних вікон, і дозволяє там програми, яким ви дозволили вхідні у Varta.
+macOS: UDP з інтернету відкидається, якщо це не відповідь.</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="414"/>
         <source>Prompt timeout</source>
         <translation>Час на відповідь</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="409"/>
+        <location filename="../mainwindow.cpp" line="415"/>
         <source>When there is no answer</source>
         <translation>Якщо немає відповіді</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="410"/>
+        <location filename="../mainwindow.cpp" line="416"/>
         <source>When no GUI is running</source>
         <translation>Коли інтерфейс не запущено</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="424"/>
+        <location filename="../mainwindow.cpp" line="432"/>
         <source>This window</source>
         <translation>Це вікно</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="428"/>
+        <location filename="../mainwindow.cpp" line="436"/>
         <source>Follow system</source>
         <translation>Як у системі</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="429"/>
+        <location filename="../mainwindow.cpp" line="437"/>
         <source>Dark</source>
         <translation>Темна</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="430"/>
+        <location filename="../mainwindow.cpp" line="438"/>
         <source>Light</source>
         <translation>Світла</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="432"/>
+        <location filename="../mainwindow.cpp" line="440"/>
         <source>Show a notification when a rule blocks a program</source>
         <translation>Показувати сповіщення, коли правило блокує програму</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="435"/>
+        <location filename="../mainwindow.cpp" line="443"/>
         <source>System language</source>
         <translation>Мова системи</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="439"/>
+        <location filename="../mainwindow.cpp" line="447"/>
         <source>Theme</source>
         <translation>Тема</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="440"/>
+        <location filename="../mainwindow.cpp" line="448"/>
         <source>Language</source>
         <translation>Мова</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="442"/>
+        <location filename="../mainwindow.cpp" line="450"/>
         <source>Check for updates once a day</source>
         <translation>Перевіряти оновлення раз на день</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="444"/>
+        <location filename="../mainwindow.cpp" line="452"/>
         <source>One anonymous request to api.github.com. Nothing about you or your rules is sent.</source>
         <translation>Один анонімний запит до api.github.com. Нічого про вас чи ваші правила не надсилається.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="445"/>
+        <location filename="../mainwindow.cpp" line="453"/>
         <source>Check now</source>
         <translation>Перевірити зараз</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="450"/>
+        <location filename="../mainwindow.cpp" line="458"/>
         <source>Updates</source>
         <translation>Оновлення</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="453"/>
+        <location filename="../mainwindow.cpp" line="461"/>
         <source>Theme and language changes apply after restarting the GUI.</source>
         <translation>Тема й мова зміняться після перезапуску інтерфейсу.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="569"/>
+        <location filename="../mainwindow.cpp" line="579"/>
         <source>IP database not installed - run: %1</source>
         <translation>База IP не встановлена — виконайте: %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="504"/>
+        <location filename="../mainwindow.cpp" line="512"/>
         <source>Open Varta</source>
         <translation>Відкрити Varta</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="476"/>
+        <location filename="../mainwindow.cpp" line="484"/>
         <source>&lt;h2&gt;Varta %1&lt;/h2&gt;&lt;p&gt;An open-source application firewall: it asks before a program talks to the network, shows who owns every address and blocks known trackers and telemetry.&lt;/p&gt;&lt;p&gt;&lt;b&gt;How it works:&lt;/b&gt; the &lt;code&gt;vartad&lt;/code&gt; service holds the first packet of every new connection (Linux: NFQUEUE, Windows: WinDivert), finds the program that owns the socket, looks up the host name from DNS answers and the owner/country in an offline IP database, then applies your rules or asks you here.&lt;/p&gt;&lt;p&gt;IP data: &lt;a href=&apos;https://db-ip.com&apos;&gt;IP Geolocation by DB-IP&lt;/a&gt; and &lt;a href=&apos;https://www.routeviews.org&apos;&gt;RouteViews&lt;/a&gt; (CC BY 4.0), packaged by &lt;a href=&apos;https://github.com/sapics/ip-location-db&apos;&gt;ip-location-db&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Windows packet capture: &lt;a href=&apos;https://reqrypt.org/windivert.html&apos;&gt;WinDivert&lt;/a&gt; (LGPL v3).&lt;/p&gt;&lt;p&gt;Licence: MIT.&lt;/p&gt;</source>
         <translation>&lt;h2&gt;Varta %1&lt;/h2&gt;&lt;p&gt;Відкритий файрвол для програм: питає, перш ніж програма вийде в мережу, показує власника кожної адреси й блокує відомі трекери та телеметрію.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Як це працює:&lt;/b&gt; служба &lt;code&gt;vartad&lt;/code&gt; затримує перший пакет кожного нового з’єднання (Linux: NFQUEUE, Windows: WinDivert), знаходить програму, якій належить сокет, бере ім’я хоста з DNS-відповідей, а власника й країну — з офлайн-бази IP, і застосовує ваші правила або питає вас тут.&lt;/p&gt;&lt;p&gt;Дані IP: &lt;a href=&apos;https://db-ip.com&apos;&gt;IP Geolocation by DB-IP&lt;/a&gt; і &lt;a href=&apos;https://www.routeviews.org&apos;&gt;RouteViews&lt;/a&gt; (CC BY 4.0), упаковка &lt;a href=&apos;https://github.com/sapics/ip-location-db&apos;&gt;ip-location-db&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Перехоплення пакетів у Windows: &lt;a href=&apos;https://reqrypt.org/windivert.html&apos;&gt;WinDivert&lt;/a&gt; (LGPL v3).&lt;/p&gt;&lt;p&gt;Ліцензія: MIT.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="510"/>
+        <location filename="../mainwindow.cpp" line="518"/>
         <source>Mode</source>
         <translation>Режим</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="516"/>
+        <location filename="../mainwindow.cpp" line="524"/>
         <source>Quit</source>
         <translation>Вийти</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="568"/>
+        <location filename="../mainwindow.cpp" line="578"/>
         <source>IP database: %L1 address ranges loaded. %2</source>
         <translation>База IP: завантажено %L1 діапазонів адрес. %2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="579"/>
+        <location filename="../mainwindow.cpp" line="589"/>
         <source>Blocked %1</source>
         <translation>Заблоковано %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="677"/>
+        <location filename="../mainwindow.cpp" line="688"/>
         <source>Rules (%1)</source>
         <translation>Правила (%1)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="689"/>
+        <location filename="../mainwindow.cpp" line="700"/>
         <source>Varta: %1 allowed, %2 blocked</source>
         <translation>Varta: дозволено %1, заблоковано %2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="690"/>
+        <location filename="../mainwindow.cpp" line="701"/>
         <source>Varta: not connected to vartad</source>
         <translation>Varta: немає зв’язку з vartad</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="694"/>
+        <location filename="../mainwindow.cpp" line="705"/>
         <source>%L1 allowed</source>
         <translation>дозволено %L1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="695"/>
+        <location filename="../mainwindow.cpp" line="706"/>
         <source>%L1 blocked</source>
         <translation>заблоковано %L1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="697"/>
+        <location filename="../mainwindow.cpp" line="708"/>
         <source>Connected: %1</source>
         <translation>Під’єднано: %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="701"/>
+        <location filename="../mainwindow.cpp" line="712"/>
         <source>Not connected to vartad. %1</source>
         <translation>Немає зв’язку з vartad. %1</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="715"/>
+        <location filename="../mainwindow.cpp" line="726"/>
         <source>Always allow %1 → %2</source>
         <translation>Завжди дозволяти %1 → %2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="716"/>
+        <location filename="../mainwindow.cpp" line="727"/>
         <source>Always block %1 → %2</source>
         <translation>Завжди блокувати %1 → %2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="717"/>
+        <location filename="../mainwindow.cpp" line="728"/>
         <source>Always block %1 (everything)</source>
         <translation>Завжди блокувати %1 (усе)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="720"/>
+        <location filename="../mainwindow.cpp" line="731"/>
         <source>Copy IP address</source>
         <translation>Копіювати IP-адресу</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="722"/>
+        <location filename="../mainwindow.cpp" line="733"/>
         <source>Copy host name</source>
         <translation>Копіювати ім’я хоста</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="723"/>
+        <location filename="../mainwindow.cpp" line="734"/>
         <source>Copy program path</source>
         <translation>Копіювати шлях до програми</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="739"/>
+        <location filename="../mainwindow.cpp" line="750"/>
         <source>Rule added.</source>
         <translation>Правило додано.</translation>
     </message>

@@ -1,4 +1,5 @@
 #include "windows_daemon.hpp"
+#include "winfw.hpp"
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -184,6 +185,7 @@ bool WindowsDaemon::open_divert(std::string& err) {
 
 void WindowsDaemon::reinstall_capture() {
     // Called with engine_mu_ held, from a GUI settings change.
+    update_firewall_wanted(true);
     const std::string filter = capture_filter(engine_.settings);
     HANDLE h = api_->Open(filter.c_str(), WINDIVERT_LAYER_NETWORK, 0, 0);
     if (h == INVALID_HANDLE_VALUE) {
@@ -299,6 +301,11 @@ void WindowsDaemon::inject_rst(const Held& h) {
 }
 
 void WindowsDaemon::verdict(const std::vector<uint64_t>& tickets, bool allow, const Connection& c) {
+    // An allowed incoming connection also needs a Windows Firewall allow rule while vartad
+    // blocks inbound there; the client's retransmission arrives once the rule is in place.
+    if (allow && c.inbound && !c.proc.exe.empty() && engine_.settings.block_inbound &&
+        inbound_once_.insert(c.proc.exe).second)
+        update_firewall_wanted(true);
     for (uint64_t t : tickets) {
         auto it = held_.find(t);
         if (it == held_.end()) continue;
@@ -316,6 +323,96 @@ void WindowsDaemon::verdict(const std::vector<uint64_t>& tickets, bool allow, co
     }
     if (c.proto == kProtoUdp)
         flows_[flow_key(c.proto, c.local_port, c.remote, c.remote_port)] = {allow, now_ms() + kUdpFlowMs};
+}
+
+// --------------------------------------------------- Windows Defender Firewall (inbound)
+
+int WindowsDaemon::run_powershell(const std::string& script, const std::string& work_dir) {
+    // Written to a file (UTF-8 with BOM, so Windows PowerShell 5.1 reads non-ASCII paths
+    // correctly) instead of the command line, which has a length limit.
+    const std::string path = work_dir + "\\varta-firewall.ps1";
+    {
+        std::ofstream f(std::filesystem::path(ProcResolver::wide(path)), std::ios::binary | std::ios::trunc);
+        if (!f) return -1;
+        f << "\xEF\xBB\xBF" << script;
+    }
+    std::wstring cmd = L"powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"" +
+                       ProcResolver::wide(path) + L"\"";
+    STARTUPINFOW si{};
+    si.cb = sizeof si;
+    PROCESS_INFORMATION pi{};
+    if (!CreateProcessW(nullptr, cmd.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi))
+        return -1;
+    WaitForSingleObject(pi.hProcess, 120000);
+    DWORD code = 1;
+    GetExitCodeProcess(pi.hProcess, &code);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    return static_cast<int>(code);
+}
+
+static std::string firewall_backup(const Paths& p) { return p.data_dir + "\\windows-firewall-backup.csv"; }
+
+void WindowsDaemon::update_firewall_wanted(bool force) {
+    const int64_t now = now_ms();
+    if (!force && now - fw_checked_ms_ < 2000) return;
+    fw_checked_ms_ = now;
+    const bool enable = engine_.settings.block_inbound;
+    std::set<std::string> programs;
+    if (enable) {
+        for (const AppRule& r : engine_.rules.all())
+            if (r.enabled && r.action == Action::Allow && r.direction == "in" && !r.exe.empty()) programs.insert(r.exe);
+        programs.insert(inbound_once_.begin(), inbound_once_.end());
+    }
+    std::string sig = enable ? "on" : "off";
+    for (const auto& p : programs) sig += "|" + p;
+    if (sig == fw_sig_) return;
+    fw_sig_ = sig;
+    {
+        std::lock_guard<std::mutex> lock(fw_mu_);
+        fw_enable_ = enable;
+        fw_programs_ = std::move(programs);
+        fw_dirty_ = true;
+    }
+    fw_cv_.notify_one();
+}
+
+void WindowsDaemon::firewall_loop() {
+    int applied = -1;  // -1 unknown, 0 restored, 1 enabled
+    for (;;) {
+        bool enable;
+        std::set<std::string> programs;
+        {
+            std::unique_lock<std::mutex> lock(fw_mu_);
+            fw_cv_.wait(lock, [&] { return fw_dirty_ || !running_; });
+            if (!running_) return;
+            fw_dirty_ = false;
+            enable = fw_enable_;
+            programs = fw_programs_;
+        }
+        if (enable) {
+            if (applied != 1) {
+                const int rc = run_powershell(winfw::enable_script(firewall_backup(paths_)), paths_.data_dir);
+                log(rc == 0 ? "Windows Firewall: inbound blocked by default, pop-ups off (block_inbound)"
+                            : "Windows Firewall: could not apply block_inbound (exit " + std::to_string(rc) + ")");
+                if (rc == 0) applied = 1;
+            }
+            const int rc = run_powershell(winfw::sync_script(programs), paths_.data_dir);
+            if (rc != 0) log("Windows Firewall: updating allowed programs failed (exit " + std::to_string(rc) + ")");
+            else log("Windows Firewall: " + std::to_string(programs.size()) + " program(s) allowed inbound");
+        } else if (applied != 0) {
+            const int rc = run_powershell(winfw::restore_script(firewall_backup(paths_)), paths_.data_dir);
+            log(rc == 0 ? "Windows Firewall: previous settings restored (block_inbound off)"
+                        : "Windows Firewall: restore failed (exit " + std::to_string(rc) + ")");
+            if (rc == 0) applied = 0;
+        }
+    }
+}
+
+int WindowsDaemon::restore_windows_firewall(const Paths& p) {
+    const int rc = run_powershell(winfw::restore_script(firewall_backup(p)), p.data_dir);
+    std::cout << (rc == 0 ? "Windows Firewall settings restored.\n" : "Could not restore Windows Firewall settings.\n");
+    return rc == 0 ? 0 : 1;
 }
 
 // ------------------------------------------------------------------------ threads
@@ -369,6 +466,7 @@ void WindowsDaemon::tick_loop() {
     while (WaitForSingleObject(stop_event_, 250) == WAIT_TIMEOUT) {
         std::lock_guard<std::mutex> lock(engine_mu_);
         engine_.tick();
+        update_firewall_wanted(false);
         if (flows_.size() > 20000) {
             const int64_t now = now_ms();
             for (auto it = flows_.begin(); it != flows_.end();)
@@ -598,6 +696,7 @@ int WindowsDaemon::run(const std::function<void()>& started) {
     if (sock_) threads_.emplace_back(&WindowsDaemon::socket_loop, this);
     threads_.emplace_back(&WindowsDaemon::pipe_loop, this);
     threads_.emplace_back(&WindowsDaemon::tick_loop, this);
+    std::thread fw(&WindowsDaemon::firewall_loop, this);
     if (started) started();
 
     WaitForSingleObject(stop_event_, INFINITE);
@@ -610,6 +709,11 @@ int WindowsDaemon::run(const std::function<void()>& started) {
     for (auto& t : threads_)
         if (t.joinable()) t.join();
     threads_.clear();
+    {
+        std::lock_guard<std::mutex> lock(fw_mu_);  // running_ is false: the worker exits
+    }
+    fw_cv_.notify_all();
+    fw.join();  // the firewall keeps its settings: inbound stays protected while vartad is off
     {
         // 2. Never leave packets in limbo: everything still held is re-injected.
         std::lock_guard<std::mutex> lock(engine_mu_);

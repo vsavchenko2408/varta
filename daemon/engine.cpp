@@ -42,6 +42,7 @@ Json Settings::to_json() const {
     j["timeout_action"] = timeout_action;
     j["no_gui_action"] = no_gui_action;
     j["ask_inbound"] = ask_inbound;
+    j["block_inbound"] = block_inbound;
     j["auto_allow_dns"] = auto_allow_dns;
     j["queue"] = queue;
     j["history"] = history;
@@ -97,10 +98,10 @@ bool Settings::set(const std::string& key, const std::string& value, std::string
         if (!parse_int(value, 0, 65535, queue)) { err = "queue: 0..65535"; return false; }
         return true;
     }
-    if (key == "ask_inbound" || key == "auto_allow_dns") {
+    if (key == "ask_inbound" || key == "auto_allow_dns" || key == "block_inbound") {
         bool b;
         if (!parse_onoff(value, b)) { err = key + " must be on or off"; return false; }
-        (key == "ask_inbound" ? ask_inbound : auto_allow_dns) = b;
+        (key == "ask_inbound" ? ask_inbound : key == "auto_allow_dns" ? auto_allow_dns : block_inbound) = b;
         return true;
     }
     err = "unknown setting '" + key + "'";
@@ -148,6 +149,8 @@ bool Settings::save(const std::string& path, std::string& err) const {
         << "# used while no GUI is connected (e.g. before you log in)\n"
         << "no_gui_action = " << no_gui_action << "\n"
         << "ask_inbound = " << (ask_inbound ? "on" : "off") << "\n"
+        << "# block unsolicited incoming traffic from the internet (macOS: pf, Windows: Windows Firewall)\n"
+        << "block_inbound = " << (block_inbound ? "on" : "off") << "\n"
         << "auto_allow_dns = " << (auto_allow_dns ? "on" : "off") << "\n"
         << "queue = " << queue << "\n"
         << "history = " << history << "\n";
@@ -552,7 +555,8 @@ std::string Engine::apply_setting(const std::string& key, const std::string& val
     std::string err;
     if (!next.set(key, value, err)) return err;
     const bool capture_change = next.ask_inbound != settings.ask_inbound ||
-                                next.auto_allow_dns != settings.auto_allow_dns;
+                                next.auto_allow_dns != settings.auto_allow_dns ||
+                                next.block_inbound != settings.block_inbound;
     settings = next;
     if (!settings.save(paths_.settings(), err)) std::cerr << "vartad: " << err << std::endl;
     if (capture_change) host_.reinstall_capture();
