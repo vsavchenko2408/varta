@@ -15,6 +15,7 @@ struct Options {
     bool no_firewall = false;
     bool no_hosts = false;
     bool custom_hosts = false;  // --hosts given (testing on a copy of the hosts file)
+    bool yes = false;           // --yes: do not ask for confirmation
 };
 
 // Terminal colours (disabled automatically when stdout is not a terminal).
@@ -42,6 +43,7 @@ public:
     bool save();
 
     int apply();
+    bool confirm_windows_firewall();
     int disable();
     int status(bool verbose);
     int update();

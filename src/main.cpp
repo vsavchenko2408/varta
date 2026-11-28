@@ -50,6 +50,7 @@ Options:
   --hosts FILE     edit FILE instead of the system hosts file (testing)
   --no-firewall    skip the firewall backend for this run
   --no-hosts       skip the hosts backend for this run
+  --yes, -y        do not ask before turning on Windows Defender Firewall
   --quiet          less output
   -h, --help       this help
   --version
@@ -102,6 +103,7 @@ int main(int argc, char** argv) {
         else if (a == "--quiet") opt.quiet = true;
         else if (a == "--no-firewall") opt.no_firewall = true;
         else if (a == "--no-hosts") opt.no_hosts = true;
+        else if (a == "--yes" || a == "-y") opt.yes = true;
         else if (a == "--home") need_value(home);
         else if (a == "--hosts") need_value(hosts);
         else if (a == "-h" || a == "--help" || a == "help") { usage(); return 0; }

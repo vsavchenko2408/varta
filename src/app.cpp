@@ -81,8 +81,36 @@ bool App::require_admin() {
     return false;
 }
 
+// Windows: the inbound rules only work while Windows Defender Firewall is on, and blocking
+// inbound by default turns it on for every profile. Say so first and ask if it is now off.
+bool App::confirm_windows_firewall() {
+    if (current_os() != Os::Windows || !use_firewall() || !cfg.sec.default_inbound_deny) return true;
+    int code = 0;
+    const std::string off = trim(run_capture(
+        "powershell -NoProfile -Command \"@(Get-NetFirewallProfile | Where-Object { -not $_.Enabled }).Count\"",
+        code));
+    if (code != 0 || off.empty() || off == "0") return true;  // already on (or unknown): nothing changes
+    ui::warn("Windows Defender Firewall is turned off on " + off + " network profile(s).");
+    ui::info("  \"Drop unsolicited inbound connections\" will turn it ON for all profiles, with inbound");
+    ui::info("  blocked by default. Windows may then ask \"allow public and private networks?\" for");
+    ui::info("  programs that wait for incoming connections. To avoid that, turn the option off:");
+    ui::info("  varta set security.default_inbound_deny off   (or in the menu: Security settings)");
+    if (opt.yes) return true;
+    if (!isatty(fileno(stdin))) {
+        ui::error("Not changed. Run again with --yes to confirm.");
+        return false;
+    }
+    std::cout << "Turn on Windows Defender Firewall? [y/N] " << std::flush;
+    std::string answer;
+    std::getline(std::cin, answer);
+    if (answer == "y" || answer == "Y" || answer == "yes") return true;
+    ui::info("Nothing changed.");
+    return false;
+}
+
 int App::apply() {
     if (!require_admin()) return 1;
+    if (!opt.dry_run && !confirm_windows_firewall()) return 1;
     const bool resolve = cfg.resolve_domains && use_firewall();
 
     // Resolving must see real DNS answers, not our own 0.0.0.0 entries.
